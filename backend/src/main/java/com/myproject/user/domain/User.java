@@ -137,6 +137,15 @@ public class User {
         this.status = UserStatus.INACTIVE;
     }
 
+    /**
+     * Takes effect on the user's existing sessions at their next request (SessionUserRevalidationFilter).
+     */
+    public void changeRoles(Set<Role> newRoles) {
+        Objects.requireNonNull(newRoles, "roles");
+        this.roles.clear();
+        this.roles.addAll(newRoles);
+    }
+
     public Long getId() {
         return id;
     }

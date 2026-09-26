@@ -1,13 +1,30 @@
 server:
   port: 8080
+  servlet:
+    session:
+      timeout: 30m
+      # Never put the session ID in URLs (;jsessionid=...).
+      tracking-modes: cookie
+      cookie:
+        http-only: true
+        same-site: lax
+        path: /
+        # Local HTTP development. application-prod.yml turns on Secure and the __Host- prefix.
+        secure: false
+  # Error responses never carry internals (these are Boot's defaults, pinned explicitly).
+  error:
+    include-stacktrace: never
+    include-message: never
+    include-binding-errors: never
+    include-exception: false
+    whitelabel:
+      enabled: false
 
 spring:
   application:
     name: backend
-  datasource:
-    url: jdbc:h2:mem:appdb;MODE=PostgreSQL;DB_CLOSE_DELAY=-1
-    username: sa
-    password:
+  # No datasource URL: Boot starts an embedded H2 with a unique name per application context
+  # (so test contexts never share or drop each other's tables). Set spring.datasource.* for a real DB.
   jpa:
     open-in-view: false
     hibernate:
@@ -16,6 +33,17 @@ spring:
     properties:
       hibernate:
         format_sql: false
+
+app:
+  cors:
+    # Exact origins only. "*" is rejected at startup.
+    allowed-origins:
+      - http://localhost:3000
+  # Provisional (TASK-01). In-memory: needs a shared store with multiple instances.
+  login-rate-limit:
+    max-failures-per-identifier: 5
+    max-failures-per-client: 50
+    window: 15m
 
 logging:
   level:

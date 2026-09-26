@@ -1,0 +1,12 @@
+# Manual local testing: mvn spring-boot:run -Dspring-boot.run.profiles=local
+# Passwords come from environment variables; startup fails if they are missing.
+app:
+  seed:
+    enabled: true
+    users:
+      - login-identifier: user
+        password: ${LOCAL_USER_PASSWORD}
+        roles: [USER]
+      - login-identifier: admin
+        password: ${LOCAL_ADMIN_PASSWORD}
+        roles: [USER, ADMIN]

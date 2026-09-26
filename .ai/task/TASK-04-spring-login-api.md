@@ -68,13 +68,30 @@ Spring Security의 session fixation protection을 사용한다.
 - 가능하면 `__Host-` prefix
 
 ## Acceptance Criteria
-- [ ] `/api/auth/csrf`
-- [ ] `/api/auth/login`
-- [ ] CORS `http://localhost:3000`
-- [ ] credentials 허용
-- [ ] OPTIONS preflight
-- [ ] CSRF 검증
-- [ ] 세션 생성
-- [ ] session fixation 방어
-- [ ] 인증 실패 정보 미노출
-- [ ] password 로그/응답 없음
+- [x] `/api/auth/csrf`
+- [x] `/api/auth/login`
+- [x] CORS `http://localhost:3000`
+- [x] credentials 허용
+- [x] OPTIONS preflight
+- [x] CSRF 검증
+- [x] 세션 생성
+- [x] session fixation 방어
+- [x] 인증 실패 정보 미노출
+- [x] password 로그/응답 없음
+
+## 구현 결과 (Claude)
+- `SecurityConfig` (`com.myproject.security`)
+  - CORS: `/api/**`, origin은 `app.cors.allowed-origins`(기본 `http://localhost:3000`), credentials 허용, methods GET/POST/PUT/PATCH/DELETE/OPTIONS, headers `Content-Type`, `X-XSRF-TOKEN`, preflight 캐시 1h. `*`·path 포함 origin은 기동 시 거부(`CorsProperties`)
+  - CSRF: `HttpSessionCsrfTokenRepository`, header `X-XSRF-TOKEN`, 기본 XOR 마스킹(BREACH 대응)
+  - formLogin/httpBasic/기본 logout/requestCache 비활성화, 401·403은 JSON
+- API (`AuthController`)
+  - `GET /api/auth/csrf` → `{"headerName":"X-XSRF-TOKEN","token":"..."}` (필요 시 세션 생성, `Cache-Control: no-store`)
+  - `POST /api/auth/login` `{"username","password"}` → 200 `{"id","loginIdentifier","roles"}`
+    - 실패는 모두 401 `{"code":"AUTHENTICATION_FAILED","message":"Invalid login identifier or password"}`
+    - 성공 시 session ID 변경(session fixation 방어) + CSRF token 폐기 → **로그인 후 `/api/auth/csrf` 재호출 필요**
+- 에러 코드: `UNAUTHENTICATED`(401), `FORBIDDEN`(403), `CSRF_INVALID`(403), `AUTHENTICATION_FAILED`(401), `MALFORMED_REQUEST`(400)
+- Cookie
+  - dev: `JSESSIONID`, HttpOnly, SameSite=Lax, Path=/, Domain 없음, URL tracking 비활성화
+  - prod(`application-prod.yml`): `__Host-SESSION`, Secure 추가, `APP_CORS_ALLOWED_ORIGINS` 환경변수 필수
+- 테스트: `AuthApiTest`, `CorsTest`, `CorsPropertiesTest`, `SessionCookieTest` — 전체 `mvn test` 67건 통과
+- 결정 사항은 `.ai/DECISIONS.md`의 D-008 ~ D-011 참고

@@ -98,3 +98,9 @@ PASS / CHANGES_REQUIRED
 ```
 
 BLOCKER/HIGH가 있으면 TASK-09로 진행하지 않는다.
+
+## 진행 상황
+- Claude 사전 점검 완료: `.ai/reports/claude/TASK-08-PRE-REVIEW.md`
+  - 발견·수정: 로그인 rate limit(F-1), 세션 principal 재검증(F-2), CORS method 축소(F-3), 오류 노출 설정 명시(F-4), E2E CORS 테스트 결함(F-5)
+  - 남은 위험 R-1 ~ R-8은 리뷰어 판단 필요
+- **Gemini 공식 리뷰 대기** — 위 체크리스트와 결과 판정은 Gemini가 작성

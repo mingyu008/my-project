@@ -1,0 +1,18 @@
+# Browser E2E tests (frontend/e2e). Fixture accounts on a throwaway in-memory DB; not real credentials.
+app:
+  seed:
+    enabled: true
+    users:
+      - login-identifier: e2e-user
+        password: E2e-User-Password-1!
+        roles: [USER]
+      - login-identifier: e2e-admin
+        password: E2e-Admin-Password-1!
+        roles: [USER, ADMIN]
+      - login-identifier: e2e-inactive
+        password: E2e-Inactive-Password-1!
+        roles: [USER]
+        status: INACTIVE
+  login-rate-limit:
+    # All E2E traffic comes from one address; keep the per-client limit out of the way.
+    max-failures-per-client: 1000
