@@ -1,0 +1,23 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: backend
+  datasource:
+    url: jdbc:h2:mem:appdb;MODE=PostgreSQL;DB_CLOSE_DELAY=-1
+    username: sa
+    password:
+  jpa:
+    open-in-view: false
+    hibernate:
+      # Local development only. Replace with a migration tool (Flyway) before any shared environment.
+      ddl-auto: create-drop
+    properties:
+      hibernate:
+        format_sql: false
+
+logging:
+  level:
+    # Never enable SQL parameter binding logs: they would print passwordHash values.
+    org.hibernate.orm.jdbc.bind: OFF
