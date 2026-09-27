@@ -16,6 +16,10 @@ app:
         password: E2e-Inactive-Password-1!
         roles: [USER]
         status: INACTIVE
+      # Plain USER; the reward E2E has the admin grant CONFIRMER through the UI.
+      - login-identifier: e2e-confirmer
+        password: E2e-Confirmer-Password-1!
+        roles: [USER]
   login-rate-limit:
     # All E2E traffic comes from one address; keep the per-client limit out of the way.
     max-failures-per-client: 1000

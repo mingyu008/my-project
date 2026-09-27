@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { ApiError } from "../api/client";
 import { createGridDatasource, type GridRow } from "../grid/gridDataService";
+import { useGridTheme } from "../layout/gridTheme";
 
 // Register only what this grid uses. ValidationModule reports missing modules/options in development only.
 ModuleRegistry.registerModules([InfiniteRowModelModule, CellStyleModule, ...(import.meta.env.DEV ? [ValidationModule] : [])]);
@@ -23,6 +24,7 @@ const COLUMNS: ColDef<GridRow>[] = [
 
 export function GridPage() {
   const [error, setError] = useState<string | null>(null);
+  const theme = useGridTheme();
 
   const datasource = useMemo(
     () =>
@@ -44,6 +46,7 @@ export function GridPage() {
       {error && <p role="alert">{error}</p>}
       <div className="grid-box">
         <AgGridReact<GridRow>
+          theme={theme}
           columnDefs={COLUMNS}
           defaultColDef={{ sortable: true }}
           rowModelType="infinite"

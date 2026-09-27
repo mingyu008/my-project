@@ -28,13 +28,20 @@ spring:
   jpa:
     open-in-view: false
     hibernate:
-      # Local development only. Replace with a migration tool (Flyway) before any shared environment.
+      # Local development and tests only (in-memory H2). The prod profile uses Flyway + validate.
       ddl-auto: create-drop
     properties:
       hibernate:
         format_sql: false
+  flyway:
+    # Migrations (db/migration) are PostgreSQL SQL; enabled by the prod profile only.
+    enabled: false
 
 app:
+  # First ADMIN for a fresh database; ignored once any ADMIN exists (BootstrapAdminRunner).
+  bootstrap-admin:
+    login-identifier: ${BOOTSTRAP_ADMIN_USERNAME:}
+    password: ${BOOTSTRAP_ADMIN_PASSWORD:}
   cors:
     # Exact origins only. "*" is rejected at startup.
     allowed-origins:

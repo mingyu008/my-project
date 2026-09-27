@@ -45,7 +45,8 @@ describe("UsersPage approval", () => {
     await user.click(await screen.findByRole("button", { name: "newbie 승인" }));
 
     expect(await within(rowOf("newbie")).findByText("활성")).toBeInTheDocument();
-    expect(within(rowOf("newbie")).queryByRole("button")).not.toBeInTheDocument();
+    expect(within(rowOf("newbie")).queryByRole("button", { name: "newbie 승인" })).not.toBeInTheDocument();
+    expect(within(rowOf("newbie")).queryByRole("button", { name: "newbie 거절" })).not.toBeInTheDocument();
     const request = requestAt(fetchMock, 2);
     expect(request.url).toMatch(/\/api\/users\/7\/approve$/);
     expect(request.init.method).toBe("POST");
@@ -90,5 +91,35 @@ describe("UsersPage approval", () => {
     await user.click(await screen.findByRole("button", { name: "newbie 승인" }));
 
     expect(await screen.findByText(USERS_MESSAGES.actionFailed)).toBeInTheDocument();
+  });
+});
+
+describe("UsersPage confirmer role", () => {
+  beforeEach(() => clearCsrfToken());
+  afterEach(() => vi.unstubAllGlobals());
+
+  const MEMBER = { id: 9, loginIdentifier: "carol", status: "ACTIVE", roles: ["USER"], createdAt: "2026-09-26T00:00:00Z" };
+
+  it("grants and revokes CONFIRMER for active non-admin users", async () => {
+    const fetchMock = mockFetch(
+      () => jsonResponse(200, [ADMIN, PENDING, MEMBER]),
+      () => jsonResponse(200, CSRF_BODY),
+      () => jsonResponse(200, { ...MEMBER, roles: ["USER", "CONFIRMER"] }),
+      () => jsonResponse(200, { ...MEMBER, roles: ["USER"] }),
+    );
+    const user = renderUsers();
+
+    await user.click(await screen.findByRole("button", { name: "carol 확인자 지정" }));
+
+    expect(await within(rowOf("carol")).findByText("사용자, 확인자")).toBeInTheDocument();
+    expect(requestAt(fetchMock, 2).url).toMatch(/\/api\/users\/9\/roles\/confirmer$/);
+    expect(requestAt(fetchMock, 2).init.method).toBe("PUT");
+    expect(within(rowOf("newbie")).queryByRole("button", { name: /확인자/ })).not.toBeInTheDocument();
+    expect(within(rowOf("admin")).queryByRole("button")).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "carol 확인자 해제" }));
+
+    expect(await within(rowOf("carol")).findByText("사용자")).toBeInTheDocument();
+    expect(requestAt(fetchMock, 3).init.method).toBe("DELETE");
   });
 });

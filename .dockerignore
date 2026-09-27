@@ -1,0 +1,14 @@
+.git
+.github
+.ai
+.claude
+docs
+**/node_modules
+frontend/dist
+frontend/test-results
+frontend/playwright-report
+frontend/tsconfig.tsbuildinfo
+backend/target
+**/*.log
+.env
+.env.*

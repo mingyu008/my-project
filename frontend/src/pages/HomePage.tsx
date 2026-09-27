@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
-import { hasRole, useAuth } from "../auth/AuthContext";
+import { useAuth } from "../auth/AuthContext";
 import { LogoutButton } from "../auth/LogoutButton";
+import { navItems } from "../layout/navItems";
 
 export function HomePage() {
   const { state } = useAuth();
@@ -15,20 +16,14 @@ export function HomePage() {
         </div>
         <LogoutButton />
       </div>
-      <nav>
+      <nav aria-label="바로가기">
+        {/* Admin items are hidden for UX only; the server authorizes every API call. */}
         <ul className="menu">
-          <li>
-            <Link to="/posts">게시판</Link>
-          </li>
-          <li>
-            <Link to="/grid">데이터 그리드</Link>
-          </li>
-          {/* Hidden for UX only; /api/users is ADMIN-only on the server. */}
-          {hasRole(user, "ADMIN") && (
-            <li>
-              <Link to="/users">사용자 관리</Link>
+          {navItems(user).map((item) => (
+            <li key={item.to}>
+              <Link to={item.to}>{item.label}</Link>
             </li>
-          )}
+          ))}
         </ul>
       </nav>
     </main>

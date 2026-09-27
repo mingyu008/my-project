@@ -42,6 +42,13 @@ class SeedUsersRunnerTest {
 
     @Nested
     @SpringBootTest(properties = {
+            // prod settings, but an in-memory database: this test is about cookies/seeding, not the schema
+            // (PostgresMigrationTest covers the real database).
+            "SPRING_DATASOURCE_URL=jdbc:h2:mem:prod-${random.uuid}",
+            "SPRING_DATASOURCE_USERNAME=sa",
+            "SPRING_DATASOURCE_PASSWORD=",
+            "spring.flyway.enabled=false",
+            "spring.jpa.hibernate.ddl-auto=create-drop",
             "APP_CORS_ALLOWED_ORIGINS=https://app.example.com",
             "app.seed.enabled=true",
             "app.seed.users[0].login-identifier=should-not-exist",

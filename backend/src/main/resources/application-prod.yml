@@ -1,5 +1,8 @@
-# Production overrides. Requires HTTPS end to end (or a proxy that forwards X-Forwarded-Proto).
+# Production overrides (Render + Supabase/Neon PostgreSQL, see docs/DEPLOY.md).
+# Requires HTTPS end to end (or a proxy that forwards X-Forwarded-Proto).
 server:
+  # Render passes the port to listen on.
+  port: ${PORT:8080}
   forward-headers-strategy: native
   servlet:
     session:
@@ -8,7 +11,26 @@ server:
         name: __Host-SESSION
         secure: true
 
+spring:
+  datasource:
+    # jdbc:postgresql://<host>:<port>/<db>?sslmode=require (startup fails when missing).
+    # Username and password are separate variables, so the password never needs URL encoding.
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
+    hikari:
+      # Free tiers: few connections, and the database may be waking up.
+      maximum-pool-size: 5
+      connection-timeout: 30000
+  jpa:
+    hibernate:
+      # Flyway owns the schema; Hibernate only checks that the entities match it.
+      ddl-auto: validate
+  flyway:
+    enabled: true
+
 app:
   cors:
-    # Comma-separated exact HTTPS origins, e.g. https://app.example.com
-    allowed-origins: ${APP_CORS_ALLOWED_ORIGINS}
+    # The React app is served from this same origin, so CORS is only a safety net.
+    # Comma-separated exact HTTPS origins; defaults to the URL Render assigns to the service.
+    allowed-origins: ${APP_CORS_ALLOWED_ORIGINS:${RENDER_EXTERNAL_URL}}

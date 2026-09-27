@@ -39,6 +39,13 @@ jobs:
       - run: npm test
       - run: npm run build
 
+  # The production image (Render deploys this Dockerfile).
+  docker-image:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build --tag my-project:ci .
+
   e2e:
     needs: [backend, frontend]
     runs-on: ubuntu-latest

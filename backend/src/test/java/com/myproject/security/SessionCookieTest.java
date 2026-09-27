@@ -47,7 +47,16 @@ class SessionCookieTest {
     @Nested
     @SpringBootTest(
             webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
-            properties = "APP_CORS_ALLOWED_ORIGINS=https://app.example.com"
+            properties = {
+            // prod settings, but an in-memory database: this test is about cookies/seeding, not the schema
+            // (PostgresMigrationTest covers the real database).
+            "SPRING_DATASOURCE_URL=jdbc:h2:mem:prod-${random.uuid}",
+            "SPRING_DATASOURCE_USERNAME=sa",
+            "SPRING_DATASOURCE_PASSWORD=",
+            "spring.flyway.enabled=false",
+            "spring.jpa.hibernate.ddl-auto=create-drop",
+            "APP_CORS_ALLOWED_ORIGINS=https://app.example.com"
+            }
     )
     @ActiveProfiles("prod")
     class Production {

@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import type { Role } from "../api/authApi";
+import { AppHeader } from "../layout/AppHeader";
 import { ForbiddenPage } from "../pages/ForbiddenPage";
 import { LoadingScreen } from "../pages/LoadingScreen";
 import { hasRole, useAuth } from "./AuthContext";
@@ -21,5 +22,10 @@ export function ProtectedRoute({ children, requiredRole }: { children: ReactNode
   if (requiredRole && !hasRole(state.user, requiredRole)) {
     return <ForbiddenPage />;
   }
-  return <>{children}</>;
+  return (
+    <>
+      <AppHeader />
+      {children}
+    </>
+  );
 }

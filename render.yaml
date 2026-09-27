@@ -1,0 +1,27 @@
+# Render Blueprint (docs/DEPLOY.md). Secrets are entered in the Render dashboard (sync: false), never here.
+services:
+  - type: web
+    name: my-project
+    runtime: docker
+    plan: free
+    # Close to Korea; put the database (Supabase or Neon) in Singapore too.
+    region: singapore
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: prod
+      # Supabase: jdbc:postgresql://aws-0-<region>.pooler.supabase.com:5432/postgres?sslmode=require (Session pooler)
+      - key: SPRING_DATASOURCE_URL
+        sync: false
+      - key: SPRING_DATASOURCE_USERNAME
+        sync: false
+      - key: SPRING_DATASOURCE_PASSWORD
+        sync: false
+      # First ADMIN on an empty database; ignored once an ADMIN exists (safe to remove afterwards).
+      - key: BOOTSTRAP_ADMIN_USERNAME
+        sync: false
+      - key: BOOTSTRAP_ADMIN_PASSWORD
+        sync: false

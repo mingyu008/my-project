@@ -51,7 +51,7 @@ export function PostListPage() {
       {load.status === "loaded" && load.page.items.length > 0 && (
         <>
           <div className="table-wrap">
-          <table>
+          <table className="responsive">
             <thead>
               <tr>
                 <th className="num">번호</th>
@@ -63,12 +63,12 @@ export function PostListPage() {
             <tbody>
               {load.page.items.map((post) => (
                 <tr key={post.id}>
-                  <td className="num">{post.id}</td>
-                  <td className="grow">
+                  <td data-label="번호" className="num">{post.id}</td>
+                  <td data-label="제목" className="grow">
                     <Link to={`/posts/${post.id}`}>{post.title}</Link>
                   </td>
-                  <td>{post.authorLoginIdentifier}</td>
-                  <td className="muted">{formatDateTime(post.createdAt)}</td>
+                  <td data-label="작성자">{post.authorLoginIdentifier}</td>
+                  <td data-label="작성일" className="muted">{formatDateTime(post.createdAt)}</td>
                 </tr>
               ))}
             </tbody>

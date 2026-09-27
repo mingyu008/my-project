@@ -24,4 +24,10 @@ export const usersApi = {
   reject(id: number): Promise<void> {
     return apiClient.post<void>(`/api/users/${id}/reject`);
   },
+
+  /** Grants (true) or revokes (false) the reward manager role CONFIRMER. */
+  setConfirmer(id: number, enabled: boolean): Promise<UserSummary> {
+    const path = `/api/users/${id}/roles/confirmer`;
+    return enabled ? apiClient.put<UserSummary>(path) : apiClient.delete<UserSummary>(path);
+  },
 };

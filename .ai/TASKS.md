@@ -22,3 +22,11 @@
 |------|------|-------|------|
 | TASK-10 | 회원 가입 + 관리자 승인 | Claude | DONE (Gemini 리뷰 대기) |
 | TASK-11 | 게시판 (글 CRUD + 페이징) | Claude | DONE (Gemini 리뷰 대기) |
+
+## 추가 요청 (Human, 2026-09-27)
+| Task | 제목 | Owner | 상태 |
+|------|------|-------|------|
+| TASK-12 | 일정관리 게시판 (`.ai/schedule-task/` 명세) | Claude | DONE (Gemini 리뷰 대기) |
+| TASK-13 | 일정 보상(확인자) + 일정 달력 (`schedule-task/10-REWARD-CALENDAR-PLAN.md`) | Claude | DONE (E2E 미실행, Gemini 리뷰 대기) |
+| TASK-14 | 모바일/웹 반응형 (공통 헤더 메뉴, 휴대폰 카드·달력 레이아웃) | Claude | DONE (FE 148, 390px/1280px 스크린샷 확인, E2E 미실행) |
+| TASK-15 | 무료 배포: Supabase PostgreSQL + Render 한 주소 (Flyway, RLS, Docker, 최초 관리자, CSP) | Claude | 코드·로컬 검증 완료, **Supabase/Render 설정·push 대기** |

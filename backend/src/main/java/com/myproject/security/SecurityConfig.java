@@ -29,6 +29,7 @@ import org.springframework.security.web.context.SecurityContextRepository;
 import org.springframework.security.web.csrf.CsrfAuthenticationStrategy;
 import org.springframework.security.web.csrf.CsrfTokenRepository;
 import org.springframework.security.web.csrf.HttpSessionCsrfTokenRepository;
+import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -42,6 +43,18 @@ import java.util.List;
 public class SecurityConfig {
 
     public static final String CSRF_HEADER_NAME = "X-XSRF-TOKEN";
+
+    public static final String CONTENT_SECURITY_POLICY = String.join("; ",
+            "default-src 'self'",
+            "script-src 'self'",
+            "style-src 'self' 'unsafe-inline'",
+            "img-src 'self' data:",
+            "font-src 'self' data:",
+            "connect-src 'self'",
+            "object-src 'none'",
+            "base-uri 'self'",
+            "form-action 'self'",
+            "frame-ancestors 'none'");
 
     private static final Logger log = LoggerFactory.getLogger(SecurityConfig.class);
 
@@ -69,13 +82,22 @@ public class SecurityConfig {
                 .addFilterAfter(new SessionUserRevalidationFilter(userRepository, securityContextRepository), SecurityContextHolderFilter.class)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(HttpMethod.GET, "/api/auth/csrf").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/auth/csrf", "/api/health").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/auth/login", "/api/auth/signup").permitAll()
                         // Lets Boot's error dispatch return the real status (e.g. 400) instead of 401.
                         .requestMatchers("/error").permitAll()
                         // Authorization is decided here, not by the frontend (menus are hidden for UX only).
                         .requestMatchers("/api/users", "/api/users/**").hasRole("ADMIN")
-                        .anyRequest().authenticated()
+                        .requestMatchers("/api/**").authenticated()
+                        // The bundled React app (static files and client-side routes) is public; all data is under /api/**.
+                        .requestMatchers(HttpMethod.GET, "/**").permitAll()
+                        .requestMatchers(HttpMethod.HEAD, "/**").permitAll()
+                        .anyRequest().denyAll()
+                )
+                .headers(headers -> headers
+                        // Scripts only from this origin. Inline styles are needed by React style props and AG Grid themes.
+                        .contentSecurityPolicy(csp -> csp.policyDirectives(CONTENT_SECURITY_POLICY))
+                        .referrerPolicy(referrer -> referrer.policy(ReferrerPolicyHeaderWriter.ReferrerPolicy.SAME_ORIGIN))
                 )
                 .exceptionHandling(ex -> ex
                         .authenticationEntryPoint(jsonErrorWriter.authenticationEntryPoint())

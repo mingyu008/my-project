@@ -2,7 +2,9 @@ package com.myproject.user.web;
 
 import com.myproject.common.web.ConflictException;
 import com.myproject.common.web.NotFoundException;
+import com.myproject.user.domain.Role;
 import com.myproject.user.domain.User;
+import com.myproject.user.domain.UserStatus;
 import com.myproject.user.dto.UserResponse;
 import com.myproject.user.repository.UserRepository;
 import org.slf4j.Logger;
@@ -11,7 +13,9 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.EnumSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * ADMIN user management. Access is restricted to ROLE_ADMIN by SecurityConfig (/api/users/**).
@@ -48,6 +52,24 @@ public class UserAdminService {
         User user = pendingUser(userId);
         userRepository.delete(user);
         log.info("Signup rejected: userId={}, adminId={}", userId, adminId);
+    }
+
+    /**
+     * Grants or revokes CONFIRMER (idempotent). Takes effect on the user's sessions at their next request.
+     */
+    @Transactional
+    public UserResponse setConfirmer(long userId, boolean enabled, long adminId) {
+        User user = userRepository.findById(userId).orElseThrow(NotFoundException::new);
+        if (user.getStatus() != UserStatus.ACTIVE) {
+            throw new ConflictException("USER_NOT_ACTIVE", "Only active users can be given roles");
+        }
+        Set<Role> roles = EnumSet.noneOf(Role.class);
+        roles.addAll(user.getRoles());
+        if (enabled ? roles.add(Role.CONFIRMER) : roles.remove(Role.CONFIRMER)) {
+            user.changeRoles(roles);
+            log.info("Confirmer role {}: userId={}, adminId={}", enabled ? "granted" : "revoked", userId, adminId);
+        }
+        return UserResponse.from(user);
     }
 
     private User pendingUser(long userId) {

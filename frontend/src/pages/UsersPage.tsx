@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { ApiError } from "../api/client";
+import type { Role } from "../api/authApi";
 import { usersApi, type UserSummary } from "../api/usersApi";
 
 export const USERS_MESSAGES = {
@@ -10,6 +11,12 @@ export const USERS_MESSAGES = {
   actionFailed: "처리하지 못했습니다. 목록을 새로고침한 뒤 다시 시도해 주세요.",
   actionForbidden: "이 작업을 수행할 권한이 없습니다.",
 } as const;
+
+const ROLE_LABELS: Record<Role, string> = {
+  USER: "사용자",
+  ADMIN: "관리자",
+  CONFIRMER: "확인자",
+};
 
 const STATUS_LABELS: Record<UserSummary["status"], string> = {
   PENDING: "승인 대기",
@@ -42,6 +49,21 @@ export function UsersPage() {
       });
     return () => controller.abort();
   }, []);
+
+  async function toggleConfirmer(user: UserSummary) {
+    setBusyId(user.id);
+    setActionError(null);
+    try {
+      const updated = await usersApi.setConfirmer(user.id, !user.roles.includes("CONFIRMER"));
+      setLoad((s) => (s.status === "loaded" ? { ...s, users: s.users.map((u) => (u.id === updated.id ? updated : u)) } : s));
+    } catch (e) {
+      if (!(e instanceof ApiError && e.status === 401)) {
+        setActionError(e instanceof ApiError && e.status === 403 ? USERS_MESSAGES.actionForbidden : USERS_MESSAGES.actionFailed);
+      }
+    } finally {
+      setBusyId(null);
+    }
+  }
 
   async function runAction(user: UserSummary, action: "approve" | "reject") {
     if (action === "reject" && !window.confirm(`${user.loginIdentifier} 님의 가입 신청을 거절할까요?`)) return;
@@ -81,7 +103,7 @@ export function UsersPage() {
         <>
           <p className="muted">승인 대기 {pendingCount}명</p>
           <div className="table-wrap">
-          <table>
+          <table className="responsive">
             <thead>
               <tr>
                 <th className="num">ID</th>
@@ -94,13 +116,13 @@ export function UsersPage() {
             <tbody>
               {load.users.map((user) => (
                 <tr key={user.id}>
-                  <td className="num">{user.id}</td>
-                  <td className="grow">{user.loginIdentifier}</td>
-                  <td>
+                  <td data-label="ID" className="num">{user.id}</td>
+                  <td data-label="아이디" className="grow">{user.loginIdentifier}</td>
+                  <td data-label="상태">
                     <span className={`badge ${user.status.toLowerCase()}`}>{STATUS_LABELS[user.status]}</span>
                   </td>
-                  <td>{user.roles.join(", ")}</td>
-                  <td>
+                  <td data-label="권한">{user.roles.map((role) => ROLE_LABELS[role] ?? role).join(", ")}</td>
+                  <td data-label="작업">
                     {user.status === "PENDING" && (
                       <div className="actions">
                         <button
@@ -122,6 +144,18 @@ export function UsersPage() {
                           거절
                         </button>
                       </div>
+                    )}
+                    {/* ADMIN already manages rewards; CONFIRMER is for active non-admin users. */}
+                    {user.status === "ACTIVE" && !user.roles.includes("ADMIN") && (
+                      <button
+                        type="button"
+                        className="small secondary"
+                        onClick={() => toggleConfirmer(user)}
+                        disabled={busyId !== null}
+                        aria-label={`${user.loginIdentifier} ${user.roles.includes("CONFIRMER") ? "확인자 해제" : "확인자 지정"}`}
+                      >
+                        {user.roles.includes("CONFIRMER") ? "확인자 해제" : "확인자 지정"}
+                      </button>
                     )}
                   </td>
                 </tr>
