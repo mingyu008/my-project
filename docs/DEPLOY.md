@@ -96,6 +96,21 @@ Supabase는 `public` 스키마 테이블을 REST API(Data API)로 자동 공개�
 | `Bootstrap admin password rejected` | 비밀번호 규칙(12자 이상, 아이디 미포함) 확인 |
 | `Validate failed: Migrations have failed validation` | 적용된 마이그레이션 파일을 수정했거나 Table Editor로 스키마를 바꿈 → 원복 후 새 `V<n>` 파일로 변경 |
 
+### 5.1 Slack 알림 (선택)
+일정이 **등록·수정**되면 확인자용 Slack 채널에 알림이 갑니다(수정은 바뀐 항목 표시, 완료로 바뀌면 보상 검토 안내). 값이 없으면 알림 없이 동작합니다.
+
+1. Slack에 확인자용 **비공개 채널**을 만들고(예: `#일정-확인`) 확인자만 초대합니다.
+   확인자는 비공개 일정도 볼 수 있는 권한이라(D-035) 알림에 비공개 일정 제목이 포함됩니다. **확인자가 아닌 사람을 채널에 넣지 마세요.**
+2. https://api.slack.com/apps → **Create New App → From scratch** (이름 예: `일정 알림`, 워크스페이스 선택)
+3. **Incoming Webhooks** → 켜기(On) → **Add New Webhook to Workspace** → 1번 채널 선택 → 허용
+4. 생성된 `https://hooks.slack.com/services/...` URL을 Render 환경변수 **`SLACK_WEBHOOK_URL`**에 넣고 저장(자동 재배포)
+5. 앱에서 일정을 하나 등록해 채널에 메시지가 오는지 확인
+
+- Webhook URL도 **비밀번호와 같습니다**(가진 사람은 누구나 채널에 글을 쓸 수 있음). 코드·문서·채팅에 남기지 말고, 노출되면 Slack 앱 설정에서 해당 Webhook을 삭제(Remove)하고 새로 만들어 교체하세요.
+- 메시지의 제목 링크는 서비스 주소(`RENDER_EXTERNAL_URL`)로 자동 생성됩니다. 커스텀 도메인을 쓰면 `APP_PUBLIC_URL=https://내도메인`을 추가하세요.
+- 알림은 저장이 끝난 뒤 별도로 보내므로, Slack이 느리거나 실패해도 일정 저장에는 영향이 없습니다. 실패는 로그에 `Slack notification rejected/failed`로 남습니다.
+- 서버가 잠든 상태(Render Free)에서도 일정 저장 요청이 서버를 깨우므로 알림은 정상적으로 나갑니다.
+
 ## 6. 첫 접속 확인
 
 1. `https://<서비스>.onrender.com/api/health` → `{"status":"UP"}`

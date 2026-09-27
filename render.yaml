@@ -25,3 +25,6 @@ services:
         sync: false
       - key: BOOTSTRAP_ADMIN_PASSWORD
         sync: false
+      # Slack Incoming Webhook of the confirmers' channel (secret). Leave empty to turn notifications off.
+      - key: SLACK_WEBHOOK_URL
+        sync: false

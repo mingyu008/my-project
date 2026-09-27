@@ -38,6 +38,12 @@ spring:
     enabled: false
 
 app:
+  notify:
+    slack:
+      # Incoming Webhook of the confirmers' channel (secret). Empty: schedule notifications are off.
+      webhook-url: ${SLACK_WEBHOOK_URL:}
+      # Base URL for links in messages; Render provides RENDER_EXTERNAL_URL.
+      public-url: ${APP_PUBLIC_URL:${RENDER_EXTERNAL_URL:}}
   # First ADMIN for a fresh database; ignored once any ADMIN exists (BootstrapAdminRunner).
   bootstrap-admin:
     login-identifier: ${BOOTSTRAP_ADMIN_USERNAME:}

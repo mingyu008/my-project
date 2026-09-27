@@ -5,6 +5,7 @@ import com.myproject.common.web.BadRequestException;
 import com.myproject.common.web.ConflictException;
 import com.myproject.common.web.ForbiddenException;
 import com.myproject.common.web.NotFoundException;
+import com.myproject.schedule.ScheduleChangedEvent.Snapshot;
 import com.myproject.schedule.ScheduleDtos.CalendarResult;
 import com.myproject.schedule.ScheduleDtos.ConflictItem;
 import com.myproject.schedule.ScheduleDtos.ConflictResult;
@@ -19,6 +20,7 @@ import com.myproject.user.domain.UserStatus;
 import com.myproject.user.repository.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -63,10 +65,12 @@ public class ScheduleService {
 
     private final ScheduleRepository scheduleRepository;
     private final UserRepository userRepository;
+    private final ApplicationEventPublisher events;
 
-    public ScheduleService(ScheduleRepository scheduleRepository, UserRepository userRepository) {
+    public ScheduleService(ScheduleRepository scheduleRepository, UserRepository userRepository, ApplicationEventPublisher events) {
         this.scheduleRepository = scheduleRepository;
         this.userRepository = userRepository;
+        this.events = events;
     }
 
     /**
@@ -99,6 +103,7 @@ public class ScheduleService {
         User creator = currentUser(current);
         Schedule schedule = scheduleRepository.save(Schedule.create(creator, content(request), request.status()));
         log.info("Schedule created: scheduleId={}, userId={}", schedule.getId(), current.id());
+        events.publishEvent(new ScheduleChangedEvent(ScheduleChangedEvent.Type.CREATED, Snapshot.of(schedule), null, current.loginIdentifier()));
         return ScheduleDetail.from(schedule, true);
     }
 
@@ -118,9 +123,14 @@ public class ScheduleService {
         }
         requireValidPeriod(request.startAt(), request.endAt());
 
+        Snapshot before = Snapshot.of(schedule);
         schedule.update(content(request), request.status(), currentUser(current));
         flush();
         log.info("Schedule updated: scheduleId={}, userId={}", id, current.id());
+        ScheduleChangedEvent event = new ScheduleChangedEvent(ScheduleChangedEvent.Type.UPDATED, Snapshot.of(schedule), before, current.loginIdentifier());
+        if (!event.unchanged()) {
+            events.publishEvent(event);
+        }
         return ScheduleDetail.from(schedule, true);
     }
 

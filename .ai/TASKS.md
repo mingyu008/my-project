@@ -30,3 +30,4 @@
 | TASK-13 | 일정 보상(확인자) + 일정 달력 (`schedule-task/10-REWARD-CALENDAR-PLAN.md`) | Claude | DONE (E2E 미실행, Gemini 리뷰 대기) |
 | TASK-14 | 모바일/웹 반응형 (공통 헤더 메뉴, 휴대폰 카드·달력 레이아웃) | Claude | DONE (FE 148, 390px/1280px 스크린샷 확인, E2E 미실행) |
 | TASK-15 | 무료 배포: Supabase PostgreSQL + Render 한 주소 (Flyway, RLS, Docker, 최초 관리자, CSP) | Claude | 코드·로컬 검증 완료, **Supabase/Render 설정·push 대기** |
+| TASK-16 | 일정 등록·수정 Slack 알림 (확인자 공용 채널, 커밋 후 비동기) | Claude | DONE (BE 216), **Slack Webhook 발급·Render 설정 대기** |
