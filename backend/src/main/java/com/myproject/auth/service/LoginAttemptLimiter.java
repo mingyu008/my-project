@@ -1,13 +1,11 @@
 package com.myproject.auth.service;
 
+import com.myproject.common.ratelimit.FixedWindowCounter;
 import org.springframework.stereotype.Component;
 
 import java.time.Clock;
 import java.time.Duration;
-import java.time.Instant;
-import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Counts failed logins per login identifier and per client address in a fixed window.
@@ -18,19 +16,12 @@ import java.util.concurrent.ConcurrentHashMap;
 @Component
 public class LoginAttemptLimiter {
 
-    /** Expired windows are purged when the map grows past this size. */
-    private static final int CLEANUP_THRESHOLD = 10_000;
-
-    private record Window(Instant start, int failures) {
-    }
-
     private final LoginRateLimitProperties properties;
-    private final Clock clock;
-    private final Map<String, Window> windows = new ConcurrentHashMap<>();
+    private final FixedWindowCounter failures;
 
     public LoginAttemptLimiter(LoginRateLimitProperties properties, Optional<Clock> clock) {
         this.properties = properties;
-        this.clock = clock.orElse(Clock.systemUTC());
+        this.failures = new FixedWindowCounter(properties.window(), clock.orElse(Clock.systemUTC()));
     }
 
     /**
@@ -38,22 +29,17 @@ public class LoginAttemptLimiter {
      * @return time until the block ends, or empty if the attempt may proceed
      */
     public Optional<Duration> blockedFor(String identifierKey, String clientKey) {
-        Instant now = clock.instant();
         Optional<Duration> byIdentifier = identifierKey == null
                 ? Optional.empty()
-                : remainingBlock(identifierKey(identifierKey), properties.maxFailuresPerIdentifier(), now);
-        return byIdentifier.or(() -> remainingBlock(clientKey(clientKey), properties.maxFailuresPerClient(), now));
+                : failures.blockedFor(identifierKey(identifierKey), properties.maxFailuresPerIdentifier());
+        return byIdentifier.or(() -> failures.blockedFor(clientKey(clientKey), properties.maxFailuresPerClient()));
     }
 
     public void recordFailure(String identifierKey, String clientKey) {
-        Instant now = clock.instant();
         if (identifierKey != null) {
-            increment(identifierKey(identifierKey), now);
+            failures.increment(identifierKey(identifierKey));
         }
-        increment(clientKey(clientKey), now);
-        if (windows.size() > CLEANUP_THRESHOLD) {
-            windows.values().removeIf(w -> isExpired(w, now));
-        }
+        failures.increment(clientKey(clientKey));
     }
 
     /**
@@ -61,24 +47,8 @@ public class LoginAttemptLimiter {
      */
     public void recordSuccess(String identifierKey) {
         if (identifierKey != null) {
-            windows.remove(identifierKey(identifierKey));
+            failures.reset(identifierKey(identifierKey));
         }
-    }
-
-    private Optional<Duration> remainingBlock(String key, int maxFailures, Instant now) {
-        Window window = windows.get(key);
-        if (window == null || isExpired(window, now) || window.failures() < maxFailures) {
-            return Optional.empty();
-        }
-        return Optional.of(Duration.between(now, window.start().plus(properties.window())));
-    }
-
-    private void increment(String key, Instant now) {
-        windows.compute(key, (k, w) -> w == null || isExpired(w, now) ? new Window(now, 1) : new Window(w.start(), w.failures() + 1));
-    }
-
-    private boolean isExpired(Window window, Instant now) {
-        return !now.isBefore(window.start().plus(properties.window()));
     }
 
     private static String identifierKey(String identifier) {

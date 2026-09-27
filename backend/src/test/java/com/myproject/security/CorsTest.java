@@ -58,11 +58,21 @@ class CorsTest {
 
     @Test
     void preflightForUnusedMethodIsRejected() throws Exception {
-        for (String method : new String[]{"PUT", "PATCH", "DELETE"}) {
-            mockMvc.perform(options("/api/users/1")
+        mockMvc.perform(options("/api/posts/1")
+                        .header(HttpHeaders.ORIGIN, FRONTEND)
+                        .header(HttpHeaders.ACCESS_CONTROL_REQUEST_METHOD, "PATCH"))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void preflightForBoardMethodsIsAllowed() throws Exception {
+        for (String method : new String[]{"PUT", "DELETE"}) {
+            mockMvc.perform(options("/api/posts/1")
                             .header(HttpHeaders.ORIGIN, FRONTEND)
-                            .header(HttpHeaders.ACCESS_CONTROL_REQUEST_METHOD, method))
-                    .andExpect(status().isForbidden());
+                            .header(HttpHeaders.ACCESS_CONTROL_REQUEST_METHOD, method)
+                            .header(HttpHeaders.ACCESS_CONTROL_REQUEST_HEADERS, "content-type,x-xsrf-token"))
+                    .andExpect(status().isOk())
+                    .andExpect(header().string(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, FRONTEND));
         }
     }
 

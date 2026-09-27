@@ -16,6 +16,7 @@ public class AuthenticationFailedException extends RuntimeException {
         USER_NOT_FOUND,
         BAD_CREDENTIALS,
         INACTIVE,
+        PENDING_APPROVAL,
         UNREADABLE_PASSWORD_HASH
     }
 

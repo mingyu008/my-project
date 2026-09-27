@@ -44,6 +44,10 @@ app:
     max-failures-per-identifier: 5
     max-failures-per-client: 50
     window: 15m
+  # Signup attempts per client address (successful or not).
+  signup-rate-limit:
+    max-attempts-per-client: 10
+    window: 1h
 
 logging:
   level:

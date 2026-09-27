@@ -1,10 +1,13 @@
 package com.myproject.user.web;
 
+import com.myproject.auth.service.AuthenticatedUser;
 import com.myproject.user.dto.UserResponse;
-import com.myproject.user.repository.UserRepository;
-import org.springframework.data.domain.Sort;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -15,15 +18,25 @@ import java.util.List;
 @RestController
 public class UserController {
 
-    private final UserRepository userRepository;
+    private final UserAdminService userAdminService;
 
-    public UserController(UserRepository userRepository) {
-        this.userRepository = userRepository;
+    public UserController(UserAdminService userAdminService) {
+        this.userAdminService = userAdminService;
     }
 
     @GetMapping("/api/users")
-    @Transactional(readOnly = true)
     public List<UserResponse> list() {
-        return userRepository.findAll(Sort.by("id")).stream().map(UserResponse::from).toList();
+        return userAdminService.list();
+    }
+
+    @PostMapping("/api/users/{id}/approve")
+    public UserResponse approve(@PathVariable long id, @AuthenticationPrincipal AuthenticatedUser admin) {
+        return userAdminService.approve(id, admin.id());
+    }
+
+    @PostMapping("/api/users/{id}/reject")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void reject(@PathVariable long id, @AuthenticationPrincipal AuthenticatedUser admin) {
+        userAdminService.reject(id, admin.id());
     }
 }

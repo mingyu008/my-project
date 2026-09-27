@@ -16,3 +16,9 @@
 - Gemini 리뷰 완료: TASK-02 ~ TASK-05 (Approved)
 - Gemini 리뷰 대기: TASK-06, TASK-07, TASK-08(공식), TASK-09
 - 커밋: `init push` 이후 TASK-04 ~ 09 변경분 미커밋
+
+## 추가 요청 (Human, 2026-09-26)
+| Task | 제목 | Owner | 상태 |
+|------|------|-------|------|
+| TASK-10 | 회원 가입 + 관리자 승인 | Claude | DONE (Gemini 리뷰 대기) |
+| TASK-11 | 게시판 (글 CRUD + 페이징) | Claude | DONE (Gemini 리뷰 대기) |

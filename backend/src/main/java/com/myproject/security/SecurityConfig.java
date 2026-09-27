@@ -70,7 +70,7 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.GET, "/api/auth/csrf").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/auth/login", "/api/auth/signup").permitAll()
                         // Lets Boot's error dispatch return the real status (e.g. 400) instead of 401.
                         .requestMatchers("/error").permitAll()
                         // Authorization is decided here, not by the frontend (menus are hidden for UX only).
@@ -132,8 +132,8 @@ public class SecurityConfig {
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowedOrigins(corsProperties.allowedOrigins());
         config.setAllowCredentials(true);
-        // Only methods the API actually serves. Add PUT/PATCH/DELETE here when such endpoints exist.
-        config.setAllowedMethods(List.of("GET", "POST"));
+        // Only methods the API actually serves (PUT/DELETE: board). Add PATCH here when such endpoints exist.
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE"));
         config.setAllowedHeaders(List.of("Content-Type", CSRF_HEADER_NAME));
         config.setMaxAge(Duration.ofHours(1));
 

@@ -8,11 +8,18 @@ export function HomePage() {
 
   return (
     <main>
-      <h1>홈</h1>
-      {user && <p>{user.loginIdentifier} 님으로 로그인했습니다.</p>}
-      <LogoutButton />
+      <div className="page-header">
+        <div>
+          <h1>홈</h1>
+          {user && <p className="muted">{user.loginIdentifier} 님으로 로그인했습니다.</p>}
+        </div>
+        <LogoutButton />
+      </div>
       <nav>
-        <ul>
+        <ul className="menu">
+          <li>
+            <Link to="/posts">게시판</Link>
+          </li>
           <li>
             <Link to="/grid">데이터 그리드</Link>
           </li>

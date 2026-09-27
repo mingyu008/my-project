@@ -85,6 +85,15 @@ public class User {
     }
 
     /**
+     * Self-service signup: the account cannot log in until an ADMIN approves it.
+     */
+    public static User createPending(String loginIdentifier, String passwordHash, Set<Role> roles) {
+        User user = create(loginIdentifier, passwordHash, roles);
+        user.status = UserStatus.PENDING;
+        return user;
+    }
+
+    /**
      * Canonical form used for storage and lookup so that uniqueness is case-insensitive.
      */
     public static String normalizeLoginIdentifier(String loginIdentifier) {
@@ -119,10 +128,24 @@ public class User {
     }
 
     /**
-     * INACTIVE users must be rejected by authentication.
+     * Only ACTIVE users may authenticate (PENDING and INACTIVE are rejected).
      */
     public boolean canAuthenticate() {
         return status == UserStatus.ACTIVE;
+    }
+
+    public boolean isPending() {
+        return status == UserStatus.PENDING;
+    }
+
+    /**
+     * ADMIN approval of a signup.
+     */
+    public void approve() {
+        if (status != UserStatus.PENDING) {
+            throw new IllegalStateException("Only PENDING users can be approved");
+        }
+        this.status = UserStatus.ACTIVE;
     }
 
     public void changePasswordHash(String newPasswordHash) {

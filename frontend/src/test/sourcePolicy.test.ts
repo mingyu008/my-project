@@ -16,6 +16,9 @@ const FORBIDDEN: Array<[string, RegExp]> = [
   ["console output", /\bconsole\s*\.\s*\w+\s*\(/],
   ["Authorization header", /["']authorization["']/i],
   ["session ID in URL", /jsessionid/i],
+  // User content (posts) must be rendered as text; React escapes it unless these are used.
+  ["raw HTML rendering", /dangerouslySetInnerHTML|\.innerHTML\s*=|\.outerHTML\s*=|insertAdjacentHTML/],
+  ["dynamic code evaluation", /\beval\s*\(|new\s+Function\s*\(/],
 ];
 
 describe("source policy", () => {

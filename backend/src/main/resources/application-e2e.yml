@@ -6,6 +6,9 @@ app:
       - login-identifier: e2e-user
         password: E2e-User-Password-1!
         roles: [USER]
+      - login-identifier: e2e-user2
+        password: E2e-User2-Password-1!
+        roles: [USER]
       - login-identifier: e2e-admin
         password: E2e-Admin-Password-1!
         roles: [USER, ADMIN]
@@ -16,3 +19,5 @@ app:
   login-rate-limit:
     # All E2E traffic comes from one address; keep the per-client limit out of the way.
     max-failures-per-client: 1000
+  signup-rate-limit:
+    max-attempts-per-client: 1000

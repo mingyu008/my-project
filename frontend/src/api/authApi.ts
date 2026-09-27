@@ -13,7 +13,19 @@ export interface LoginCredentials {
   password: string;
 }
 
+export interface SignupResult {
+  loginIdentifier: string;
+  status: "PENDING";
+}
+
 export const authApi = {
+  /**
+   * Creates a PENDING account; it can log in only after an ADMIN approves it.
+   */
+  signup(credentials: LoginCredentials): Promise<SignupResult> {
+    return apiClient.post<SignupResult>("/api/auth/signup", credentials);
+  },
+
   /**
    * The server changes the session ID and discards the CSRF token on success,
    * so the cached token is cleared and the next state-changing request fetches a new one.

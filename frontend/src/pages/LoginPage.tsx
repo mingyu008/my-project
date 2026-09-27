@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from "react";
-import { Navigate, useLocation } from "react-router-dom";
+import { Link, Navigate, useLocation } from "react-router-dom";
 import { ApiError } from "../api/client";
 import { useAuth } from "../auth/AuthContext";
 import { LoadingScreen } from "./LoadingScreen";
@@ -95,10 +95,10 @@ export function LoginPage() {
   }
 
   return (
-    <main className="login">
+    <main className="auth login">
       <h1>로그인</h1>
       <form onSubmit={handleSubmit} noValidate aria-busy={submitting}>
-        <div>
+        <div className="field">
           <label htmlFor="username">아이디</label>
           <input
             id="username"
@@ -114,7 +114,7 @@ export function LoginPage() {
           {fieldErrors.username && <p id="username-error" role="alert">{fieldErrors.username}</p>}
         </div>
 
-        <div>
+        <div className="field">
           <label htmlFor="password">비밀번호</label>
           <input
             id="password"
@@ -132,10 +132,13 @@ export function LoginPage() {
 
         {formError && <p role="alert">{formError}</p>}
 
-        <button type="submit" disabled={submitting}>
+        <button type="submit" className="block" disabled={submitting}>
           {submitting ? "로그인 중..." : "로그인"}
         </button>
       </form>
+      <p className="center muted">
+        계정이 없나요? <Link to="/signup">회원 가입</Link>
+      </p>
     </main>
   );
 }

@@ -24,7 +24,7 @@ export function LogoutButton() {
 
   return (
     <>
-      <button type="button" onClick={handleClick} disabled={pending}>
+      <button type="button" className="secondary" onClick={handleClick} disabled={pending}>
         {pending ? "로그아웃 중..." : "로그아웃"}
       </button>
       {error && <p role="alert">{error}</p>}

@@ -66,7 +66,7 @@ public class AuthService {
         }
         // Checked only after the password so that account status is not revealed to someone without it.
         if (!user.canAuthenticate()) {
-            throw failure(Reason.INACTIVE, user.getId());
+            throw failure(user.isPending() ? Reason.PENDING_APPROVAL : Reason.INACTIVE, user.getId());
         }
 
         if (passwordEncoder.upgradeEncoding(user.getPasswordHash())) {

@@ -1,21 +1,21 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import type { Role } from "../api/authApi";
-import { ApiError, apiClient } from "../api/client";
-
-interface UserSummary {
-  id: number;
-  loginIdentifier: string;
-  status: "ACTIVE" | "INACTIVE";
-  roles: Role[];
-  createdAt: string;
-}
+import { ApiError } from "../api/client";
+import { usersApi, type UserSummary } from "../api/usersApi";
 
 export const USERS_MESSAGES = {
   loading: "사용자 목록을 불러오는 중...",
   forbidden: "사용자 목록을 조회할 권한이 없습니다.",
   generic: "사용자 목록을 불러오지 못했습니다.",
+  actionFailed: "처리하지 못했습니다. 목록을 새로고침한 뒤 다시 시도해 주세요.",
+  actionForbidden: "이 작업을 수행할 권한이 없습니다.",
 } as const;
+
+const STATUS_LABELS: Record<UserSummary["status"], string> = {
+  PENDING: "승인 대기",
+  ACTIVE: "활성",
+  INACTIVE: "비활성",
+};
 
 type LoadState =
   | { status: "loading" }
@@ -24,11 +24,13 @@ type LoadState =
 
 export function UsersPage() {
   const [load, setLoad] = useState<LoadState>({ status: "loading" });
+  const [busyId, setBusyId] = useState<number | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
 
   useEffect(() => {
     const controller = new AbortController();
-    apiClient
-      .get<UserSummary[]>("/api/users", controller.signal)
+    usersApi
+      .list(controller.signal)
       .then((users) => setLoad({ status: "loaded", users }))
       .catch((e: unknown) => {
         if (controller.signal.aborted) return;
@@ -41,33 +43,93 @@ export function UsersPage() {
     return () => controller.abort();
   }, []);
 
+  async function runAction(user: UserSummary, action: "approve" | "reject") {
+    if (action === "reject" && !window.confirm(`${user.loginIdentifier} 님의 가입 신청을 거절할까요?`)) return;
+    setBusyId(user.id);
+    setActionError(null);
+    try {
+      if (action === "approve") {
+        const updated = await usersApi.approve(user.id);
+        setLoad((s) => (s.status === "loaded" ? { ...s, users: s.users.map((u) => (u.id === updated.id ? updated : u)) } : s));
+      } else {
+        await usersApi.reject(user.id);
+        setLoad((s) => (s.status === "loaded" ? { ...s, users: s.users.filter((u) => u.id !== user.id) } : s));
+      }
+    } catch (e) {
+      if (!(e instanceof ApiError && e.status === 401)) {
+        setActionError(e instanceof ApiError && e.status === 403 ? USERS_MESSAGES.actionForbidden : USERS_MESSAGES.actionFailed);
+      }
+    } finally {
+      setBusyId(null);
+    }
+  }
+
+  const pendingCount = load.status === "loaded" ? load.users.filter((u) => u.status === "PENDING").length : 0;
+
   return (
     <main>
-      <h1>사용자 관리</h1>
-      <Link to="/">홈으로</Link>
+      <div className="page-header">
+        <h1>사용자 관리</h1>
+        <Link to="/" className="btn secondary">
+          홈으로
+        </Link>
+      </div>
       {load.status === "loading" && <p role="status">{USERS_MESSAGES.loading}</p>}
       {load.status === "error" && <p role="alert">{load.message}</p>}
+      {actionError && <p role="alert">{actionError}</p>}
       {load.status === "loaded" && (
-        <table>
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>아이디</th>
-              <th>상태</th>
-              <th>권한</th>
-            </tr>
-          </thead>
-          <tbody>
-            {load.users.map((user) => (
-              <tr key={user.id}>
-                <td>{user.id}</td>
-                <td>{user.loginIdentifier}</td>
-                <td>{user.status}</td>
-                <td>{user.roles.join(", ")}</td>
+        <>
+          <p className="muted">승인 대기 {pendingCount}명</p>
+          <div className="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th className="num">ID</th>
+                <th>아이디</th>
+                <th>상태</th>
+                <th>권한</th>
+                <th>작업</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {load.users.map((user) => (
+                <tr key={user.id}>
+                  <td className="num">{user.id}</td>
+                  <td className="grow">{user.loginIdentifier}</td>
+                  <td>
+                    <span className={`badge ${user.status.toLowerCase()}`}>{STATUS_LABELS[user.status]}</span>
+                  </td>
+                  <td>{user.roles.join(", ")}</td>
+                  <td>
+                    {user.status === "PENDING" && (
+                      <div className="actions">
+                        <button
+                          type="button"
+                          className="small"
+                          onClick={() => runAction(user, "approve")}
+                          disabled={busyId !== null}
+                          aria-label={`${user.loginIdentifier} 승인`}
+                        >
+                          승인
+                        </button>
+                        <button
+                          type="button"
+                          className="small danger"
+                          onClick={() => runAction(user, "reject")}
+                          disabled={busyId !== null}
+                          aria-label={`${user.loginIdentifier} 거절`}
+                        >
+                          거절
+                        </button>
+                      </div>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          </div>
+        </>
       )}
     </main>
   );

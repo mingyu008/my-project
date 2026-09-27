@@ -117,6 +117,27 @@
   (page.route로 만든 origin은 Chrome Local Network Access가 먼저 막아 CORS 검증이 되지 않음).
 - CI: `.github/workflows/ci.yml`.
 
+## D-024 회원 가입 = 관리자 승인제 (TASK-10, Human 결정)
+- 가입 계정은 `PENDING` + role USER. ADMIN 승인 시 ACTIVE, 거절 시 신청 삭제(아이디 재사용 가능).
+- PENDING 로그인 실패 응답은 다른 실패와 동일 (D-006 유지). 가입 완료 화면에서 승인 대기임을 안내.
+
+## D-025 가입 입력 규칙 (TASK-10)
+- 아이디: 정규화 후 `[a-z0-9._-]{4,30}` (기존 계정·seed에는 적용하지 않음, 로그인은 기존 규칙).
+- 비밀번호: 12~128자, 단일 문자 반복 금지, 아이디 포함 금지 (NIST SP 800-63B 방식: 조합 규칙 대신 길이).
+  유출 비밀번호 목록 검사는 미적용 — 필요 시 추가.
+- 아이디 중복은 409로 알림 (아이디 기반 가입에서는 불가피한 존재 여부 노출). 가입 rate limit(client당 1시간 10회)으로 탐색 제한.
+
+## D-026 게시판 권한 (TASK-11, 범위: 글 CRUD + 페이징 — Human 결정)
+- 로그인 사용자 전원 조회·작성. 수정·삭제는 작성자 또는 ADMIN (서버 `PostService`에서 검증, UI 버튼은 `editable` 힌트).
+- 본문은 plain text. 프론트는 text로만 렌더링하고 raw HTML API 사용을 정적 테스트로 금지.
+- 목록 size 상한 50, 최신순.
+
+## D-027 CORS 허용 method 갱신 (TASK-11, D-021 대체)
+- 게시판 수정/삭제를 위해 `GET, POST, PUT, DELETE` 허용. PATCH는 미사용이라 계속 거부.
+
+## D-028 공통 rate limit 카운터 (TASK-10)
+- `FixedWindowCounter`(메모리)를 로그인·가입 limiter가 공유. 다중 인스턴스에서는 공유 저장소 필요 (기존 미결과 동일).
+
 ## 미결 (TASK-01에서 결정 필요)
 - rate limit 수치·잠금 정책 확정 (현재 D-020 잠정값), lockout DoS 대응
 - 동시 로그인 정책, absolute session timeout
@@ -124,3 +145,5 @@
 - 운영 Frontend/Backend Origin (SameSite 전제 확인)
 - DB migration 도구 및 운영 DB
 - frontend 배포 방식과 보안 header(CSP 등)
+- 게시판 확장(댓글·검색·첨부) 여부, 탈퇴/비활성 사용자의 게시글 처리 정책
+- 가입 시 유출 비밀번호 검사, 봇 방지(CAPTCHA) 필요 여부

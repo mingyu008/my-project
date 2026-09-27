@@ -35,10 +35,14 @@ export function GridPage() {
 
   return (
     <main>
-      <h1>데이터 그리드</h1>
-      <Link to="/">홈으로</Link>
+      <div className="page-header">
+        <h1>데이터 그리드</h1>
+        <Link to="/" className="btn secondary">
+          홈으로
+        </Link>
+      </div>
       {error && <p role="alert">{error}</p>}
-      <div style={{ height: 500 }}>
+      <div className="grid-box">
         <AgGridReact<GridRow>
           columnDefs={COLUMNS}
           defaultColDef={{ sortable: true }}
