@@ -18,17 +18,20 @@ import jakarta.persistence.Table;
 import jakarta.persistence.Version;
 
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.Objects;
 
 /**
- * Points granted by a reward manager for a completed schedule. The reason is plain text; never render it as HTML.
- * Only PENDING rewards can be changed; PAID and CANCELLED are kept as history.
+ * Points granted by a reward manager for a completed schedule, or for one day of a student's study
+ * ({@link RewardSource#STUDY}: no schedule, the day and its study time instead). The reason is plain text;
+ * never render it as HTML. Only PENDING rewards can be changed; PAID and CANCELLED are kept as history.
  */
 @Entity
 @Table(name = "schedule_rewards", indexes = {
         @Index(name = "idx_schedule_rewards_schedule_id", columnList = "schedule_id"),
         @Index(name = "idx_schedule_rewards_recipient_status", columnList = "recipient_id, status"),
-        @Index(name = "idx_schedule_rewards_status", columnList = "status")
+        @Index(name = "idx_schedule_rewards_status", columnList = "status"),
+        @Index(name = "idx_schedule_rewards_recipient_study_date", columnList = "recipient_id, study_date")
 })
 public class ScheduleReward {
 
@@ -40,9 +43,22 @@ public class ScheduleReward {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "schedule_id", nullable = false, updatable = false)
+    /** Null for STUDY rewards. */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "schedule_id", updatable = false)
     private Schedule schedule;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "source", nullable = false, length = 20, updatable = false)
+    private RewardSource source;
+
+    /** STUDY: the Asia/Seoul day the reward is for. */
+    @Column(name = "study_date", updatable = false)
+    private LocalDate studyDate;
+
+    /** STUDY: that day's recorded study time when the reward was given (the record may change later). */
+    @Column(name = "study_sec", updatable = false)
+    private Integer studySec;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "recipient_id", nullable = false)
@@ -85,10 +101,27 @@ public class ScheduleReward {
     public static ScheduleReward create(Schedule schedule, User recipient, int points, String reason, User creator) {
         ScheduleReward reward = new ScheduleReward();
         reward.schedule = Objects.requireNonNull(schedule, "schedule");
+        reward.source = RewardSource.SCHEDULE;
         reward.createdBy = Objects.requireNonNull(creator, "creator");
         reward.status = RewardStatus.PENDING;
         reward.apply(recipient, points, reason, creator);
         return reward;
+    }
+
+    public static ScheduleReward createForStudy(User recipient, LocalDate studyDate, int studySec, int points, String reason,
+                                                User creator) {
+        ScheduleReward reward = new ScheduleReward();
+        reward.source = RewardSource.STUDY;
+        reward.studyDate = Objects.requireNonNull(studyDate, "studyDate");
+        reward.studySec = studySec;
+        reward.createdBy = Objects.requireNonNull(creator, "creator");
+        reward.status = RewardStatus.PENDING;
+        reward.apply(recipient, points, reason, creator);
+        return reward;
+    }
+
+    public boolean isStudy() {
+        return source == RewardSource.STUDY;
     }
 
     public void update(User recipient, int points, String reason, User editor) {
@@ -154,6 +187,18 @@ public class ScheduleReward {
 
     public Schedule getSchedule() {
         return schedule;
+    }
+
+    public RewardSource getSource() {
+        return source;
+    }
+
+    public LocalDate getStudyDate() {
+        return studyDate;
+    }
+
+    public Integer getStudySec() {
+        return studySec;
     }
 
     public User getRecipient() {

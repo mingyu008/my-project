@@ -1,5 +1,5 @@
 import { ApiError } from "../../api/client";
-import type { RewardStatus } from "../../api/rewardApi";
+import { isStudyReward, type Reward, type RewardStatus } from "../../api/rewardApi";
 
 export const REWARD_MESSAGES = {
   loading: "보상을 불러오는 중...",
@@ -19,6 +19,9 @@ export const REWARD_MESSAGES = {
   reasonRequired: "사유를 입력해 주세요.",
   payConfirm: "이 보상을 지급 완료로 처리할까요? 지급 후에는 변경할 수 없습니다.",
   cancelConfirm: "이 보상을 취소할까요? 취소 후에는 변경할 수 없습니다.",
+  studyRewardExists: "이 날의 공부에는 이미 보상이 있어요. 보상 관리에서 확인해 주세요.",
+  noStudyTime: "이 날은 기록된 공부시간이 없어요.",
+  futureDay: "아직 오지 않은 날에는 보상을 줄 수 없어요.",
 } as const;
 
 export const REWARD_STATUS_LABELS: Record<RewardStatus, string> = {
@@ -44,6 +47,12 @@ export function rewardErrorMessage(error: unknown): string | null {
         return REWARD_MESSAGES.notPending;
       case "REWARD_VERSION_CONFLICT":
         return REWARD_MESSAGES.versionConflict;
+      case "STUDY_REWARD_EXISTS":
+        return REWARD_MESSAGES.studyRewardExists;
+      case "NO_STUDY_TIME":
+        return REWARD_MESSAGES.noStudyTime;
+      case "INVALID_RECORD_DATE":
+        return REWARD_MESSAGES.futureDay;
       case "NETWORK_ERROR":
         return REWARD_MESSAGES.networkError;
     }
@@ -56,4 +65,13 @@ export function rewardErrorMessage(error: unknown): string | null {
 
 export function formatPoints(points: number): string {
   return `${points.toLocaleString("ko-KR")}P`;
+}
+
+/** "9월 28일 공부 (2시간 30분)" for study rewards, the schedule title otherwise. Used in labels too. */
+export function rewardTargetLabel(reward: Reward): string {
+  if (!isStudyReward(reward)) return reward.scheduleTitle ?? "";
+  const [, month, day] = (reward.studyDate ?? "").split("-").map(Number);
+  const min = Math.floor((reward.studySec ?? 0) / 60);
+  const time = min >= 60 ? `${Math.floor(min / 60)}시간${min % 60 ? ` ${min % 60}분` : ""}` : `${min}분`;
+  return `${month}월 ${day}일 공부 (${time})`;
 }

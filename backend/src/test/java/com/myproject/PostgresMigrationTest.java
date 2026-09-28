@@ -58,7 +58,7 @@ class PostgresMigrationTest {
     @Test
     void migratesValidatesAndRunsTheMainQueries() throws Exception {
         assertThat(jdbc.queryForObject("select version from flyway_schema_history where success order by installed_rank desc limit 1",
-                String.class)).isEqualTo("4");
+                String.class)).isEqualTo("5");
 
         // The bootstrap admin can log in (Argon2 hash stored in PostgreSQL).
         MockHttpSession admin = login(mockMvc, "boss", "Bootstrap-Admin-Pass-9");

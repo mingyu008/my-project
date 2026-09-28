@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -26,6 +27,11 @@ public interface ScheduleRewardRepository extends JpaRepository<ScheduleReward, 
 
     @EntityGraph(attributePaths = {"schedule", "recipient", "createdBy", "updatedBy"})
     List<ScheduleReward> findByScheduleIdAndRecipientIdOrderByIdAsc(Long scheduleId, Long recipientId);
+
+    boolean existsByRecipientIdAndStudyDateAndStatusNot(Long recipientId, LocalDate studyDate, RewardStatus status);
+
+    @EntityGraph(attributePaths = {"recipient", "createdBy", "updatedBy"})
+    List<ScheduleReward> findByStudyDateAndStatusNotOrderByIdAsc(LocalDate studyDate, RewardStatus status);
 
     /** Per-recipient totals; cancelled rewards are not counted. {@code recipientId} null means everyone. */
     @Query("""

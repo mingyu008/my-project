@@ -1,4 +1,5 @@
 import { apiClient } from "./client";
+import type { Reward } from "./rewardApi";
 
 // Mirrors server limits (Subject.NAME_MAX_LENGTH, StudyService, StudySession.MAX_SECONDS, StudyGoal).
 export const SUBJECT_NAME_MAX_LENGTH = 20;
@@ -52,6 +53,63 @@ export interface StudySession {
 export type ManualInput =
   | { subjectId: number; durationSec: number; recordDate?: string }
   | { subjectId: number; startTime: string; endTime: string };
+
+/** Study review (reward managers only; TASK-TIMER-02). */
+export interface StudyStudent {
+  id: number;
+  loginIdentifier: string;
+  nickname: string | null;
+}
+
+export interface StudyDayRow {
+  student: StudyStudent;
+  totalSec: number;
+  /** Stopwatch + pomodoro time (measured by the server). */
+  timerSec: number;
+  /** Hand-entered time (self-reported). */
+  manualSec: number;
+  sessionCount: number;
+  /** The day's non-cancelled study reward, if any. */
+  reward: Reward | null;
+}
+
+export interface StudyDayReview {
+  date: string;
+  students: StudyDayRow[];
+}
+
+export interface StudySessionRow {
+  id: number;
+  subjectName: string;
+  mode: StudyMode;
+  startTime: string | null;
+  endTime: string | null;
+  durationSec: number;
+}
+
+export interface StudentStudyDay {
+  student: StudyStudent;
+  date: string;
+  totalSec: number;
+  timerSec: number;
+  manualSec: number;
+  sessions: StudySessionRow[];
+  reward: Reward | null;
+}
+
+export const studyReviewApi = {
+  day(date: string, signal?: AbortSignal): Promise<StudyDayReview> {
+    return apiClient.get<StudyDayReview>(`/api/study/review?date=${encodeURIComponent(date)}`, signal);
+  },
+
+  student(userId: number, date: string, signal?: AbortSignal): Promise<StudentStudyDay> {
+    return apiClient.get<StudentStudyDay>(`/api/study/review/${userId}?date=${encodeURIComponent(date)}`, signal);
+  },
+
+  reward(userId: number, input: { date: string; points: number; reason: string }): Promise<Reward> {
+    return apiClient.post<Reward>(`/api/study/review/${userId}/reward`, input);
+  },
+};
 
 export const studyApi = {
   /** The first call creates the default subjects (수학, 영어, 국어, 탐구, 기타). */

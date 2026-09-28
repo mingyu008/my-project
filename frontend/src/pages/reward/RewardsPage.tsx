@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import {
   isRewardManager,
+  isStudyReward,
   REWARD_STATUSES,
   rewardApi,
   type Reward,
@@ -11,7 +12,7 @@ import {
 } from "../../api/rewardApi";
 import { useAuth } from "../../auth/AuthContext";
 import { formatDateTime } from "../board/boardMessages";
-import { formatPoints, REWARD_MESSAGES, REWARD_STATUS_LABELS, rewardErrorMessage } from "./rewardMessages";
+import { formatPoints, REWARD_MESSAGES, REWARD_STATUS_LABELS, rewardErrorMessage, rewardTargetLabel } from "./rewardMessages";
 
 type Load<T> = { status: "loading" } | { status: "loaded"; data: T } | { status: "error"; message: string };
 
@@ -110,6 +111,11 @@ export function RewardsPage() {
           <Link to="/schedule" className="btn secondary">
             일정관리
           </Link>
+          {manager && (
+            <Link to="/study/review" className="btn secondary">
+              공부 기록 확인
+            </Link>
+          )}
         </nav>
       </div>
 
@@ -191,7 +197,7 @@ export function RewardsPage() {
               <table className="responsive" aria-label="보상 내역">
                 <thead>
                   <tr>
-                    <th>일정</th>
+                    <th>대상</th>
                     <th>수령자</th>
                     <th>포인트</th>
                     <th>사유</th>
@@ -203,8 +209,12 @@ export function RewardsPage() {
                 <tbody>
                   {list.data.content.map((reward) => (
                     <tr key={reward.id}>
-                      <td data-label="일정">
-                        <Link to={`/schedule/${reward.scheduleId}`}>{reward.scheduleTitle}</Link>
+                      <td data-label="대상">
+                        {isStudyReward(reward) ? (
+                          <span>📚 {rewardTargetLabel(reward)}</span>
+                        ) : (
+                          <Link to={`/schedule/${reward.scheduleId}`}>{reward.scheduleTitle}</Link>
+                        )}
                       </td>
                       <td data-label="수령자">{reward.recipient.loginIdentifier}</td>
                       <td data-label="포인트">{formatPoints(reward.points)}</td>
@@ -223,7 +233,7 @@ export function RewardsPage() {
                               className="small"
                               onClick={() => process(reward, "pay")}
                               disabled={busyId !== null}
-                              aria-label={`${reward.scheduleTitle} ${reward.recipient.loginIdentifier} 보상 지급`}
+                              aria-label={`${rewardTargetLabel(reward)} ${reward.recipient.loginIdentifier} 보상 지급`}
                             >
                               지급
                             </button>
@@ -232,7 +242,7 @@ export function RewardsPage() {
                               className="small danger"
                               onClick={() => process(reward, "cancel")}
                               disabled={busyId !== null}
-                              aria-label={`${reward.scheduleTitle} ${reward.recipient.loginIdentifier} 보상 취소`}
+                              aria-label={`${rewardTargetLabel(reward)} ${reward.recipient.loginIdentifier} 보상 취소`}
                             >
                               취소
                             </button>

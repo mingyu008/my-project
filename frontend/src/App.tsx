@@ -16,6 +16,7 @@ import { RewardsPage } from "./pages/reward/RewardsPage";
 import { ScheduleCalendarPage } from "./pages/schedule/ScheduleCalendarPage";
 import { ScheduleDetailPage } from "./pages/schedule/ScheduleDetailPage";
 import { ScheduleFormPage } from "./pages/schedule/ScheduleFormPage";
+import { StudyReviewPage } from "./pages/study/StudyReviewPage";
 import { StudyTimerPage } from "./pages/study/StudyTimerPage";
 
 // AG Grid is large; load it only when a grid screen is opened.
@@ -60,6 +61,8 @@ export function App() {
       <Route path="/schedule/:id/edit" element={protect(<ScheduleFormPage key="edit" />)} />
       <Route path="/rewards" element={protect(<RewardsPage />)} />
       <Route path="/study" element={protect(<StudyTimerPage />)} />
+      {/* Reward managers only: the page shows 접근 거부 to others and the API returns 403. */}
+      <Route path="/study/review" element={protect(<StudyReviewPage />)} />
       <Route
         path="/users"
         element={

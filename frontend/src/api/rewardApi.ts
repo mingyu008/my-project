@@ -11,11 +11,22 @@ export const REWARD_PAGE_SIZE = 20;
 export const REWARD_STATUSES = ["PENDING", "PAID", "CANCELLED"] as const;
 export type RewardStatus = (typeof REWARD_STATUSES)[number];
 
-/** {@code reason} is plain text: render it as text only. */
+/** SCHEDULE: for a completed schedule. STUDY: for one day of a student's study time (TASK-TIMER-02). */
+export type RewardSource = "SCHEDULE" | "STUDY";
+
+/**
+ * {@code reason} is plain text: render it as text only.
+ * SCHEDULE rewards carry scheduleId/scheduleTitle; STUDY rewards carry studyDate/studySec (null otherwise).
+ */
 export interface Reward {
   id: number;
-  scheduleId: number;
-  scheduleTitle: string;
+  /** Absent in responses from before study rewards existed: treat as SCHEDULE. */
+  source?: RewardSource;
+  scheduleId: number | null;
+  scheduleTitle: string | null;
+  studyDate?: string | null;
+  /** The day's study time when the reward was given. */
+  studySec?: number | null;
   recipient: UserRef;
   points: number;
   reason: string;
@@ -57,6 +68,10 @@ export interface RewardInput {
   reason: string;
   /** Required for update. */
   version?: number;
+}
+
+export function isStudyReward(reward: Reward): boolean {
+  return reward.source === "STUDY";
 }
 
 /** CONFIRMER or ADMIN (UX only; the server decides). */

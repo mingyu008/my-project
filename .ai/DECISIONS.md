@@ -251,6 +251,15 @@
 - 과목: 사용자별, 첫 조회 시 기본 5개(수학·영어·국어·탐구·기타) 생성(동시 첫 조회 경합은 unique 제약으로 흡수), 최대 20개, 이름 1~20자. 하루 목표 기본 8시간(10분~24시간).
 - 휴식 시간은 저장하지 않음(순공 제외). 학생용 화면은 카드·버튼만(ag-Grid 미사용). 관리자/확인자용 조회 화면은 범위 밖.
 
+## D-048 공부 기록 확인 + 공부 보상 (TASK-TIMER-02, Claude 제안 — 단위·중복 규칙은 Human 확인 대기)
+- 보상 관리자(CONFIRMER·ADMIN, D-035)만: `GET /api/study/review?date=`(그날 공부한 학생별 합계), `GET /api/study/review/{userId}?date=`(기록 목록),
+  `POST /api/study/review/{userId}/reward {date, points, reason}`. 그 외 403.
+- 타이머 시간(서버 측정)과 직접 입력(MANUAL, 자기 신고) 시간을 나눠 보여 준다. 직접 입력이 더 많으면 화면에 표시.
+- 보상 단위 = **학생 × 하루**. 기존 보상 테이블 재사용(`source` = SCHEDULE | STUDY, STUDY는 `study_date` + 당시 `study_sec` 스냅샷, `schedule_id` 없음, `V5`).
+  그래서 지급/취소·포인트 현황·내 보상은 기존 화면·API 그대로 동작. 공부 보상 지급에는 일정 완료 조건 없음.
+- 같은 학생·날짜에 취소되지 않은 공부 보상은 1개(409 `STUDY_REWARD_EXISTS`). 공부시간 0인 날(400 `NO_STUDY_TIME`)·미래 날짜 불가. 본인 보상 금지(D-036 유지).
+  공부 보상의 수령자 변경 불가(포인트·사유만 수정).
+
 ## 미결 (TASK-01에서 결정 필요)
 - rate limit 수치·잠금 정책 확정 (현재 D-020 잠정값), lockout DoS 대응
 - 동시 로그인 정책, absolute session timeout

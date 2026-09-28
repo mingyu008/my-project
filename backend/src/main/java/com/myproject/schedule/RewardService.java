@@ -24,6 +24,7 @@ import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.List;
 
 import static com.myproject.schedule.ScheduleAccess.isRewardManager;
@@ -86,10 +87,46 @@ public class RewardService {
         if (request.version() != reward.getVersion()) {
             throw versionConflict();
         }
+        // A study reward belongs to that student's day: points and reason may change, the recipient may not.
+        if (reward.isStudy() && request.recipientId() != reward.getRecipient().getId().longValue()) {
+            throw new BadRequestException("INVALID_RECIPIENT", "A study reward cannot move to another user");
+        }
         reward.update(recipient(request.recipientId(), current), request.points(), request.reason(), currentUser(current));
         flush();
-        log.info("Reward updated: rewardId={}, scheduleId={}, userId={}", rewardId, reward.getSchedule().getId(), current.id());
+        log.info("Reward updated: rewardId={}, target={}, userId={}", rewardId, target(reward), current.id());
         return response(reward, current);
+    }
+
+    /**
+     * Reward for one day of a student's study (TASK-TIMER-02). The caller has checked that the student studied
+     * that day; {@code studySec} is kept as a snapshot. At most one non-cancelled study reward per student and day.
+     */
+    @Transactional
+    public RewardResponse createForStudy(long recipientId, LocalDate date, int studySec, int points, String reason,
+                                         AuthenticatedUser current) {
+        requireRewardManager(current);
+        User recipient = recipient(recipientId, current);
+        if (rewardRepository.existsByRecipientIdAndStudyDateAndStatusNot(recipientId, date, RewardStatus.CANCELLED)) {
+            throw new ConflictException("STUDY_REWARD_EXISTS", "This study day already has a reward");
+        }
+        ScheduleReward reward = rewardRepository.save(
+                ScheduleReward.createForStudy(recipient, date, studySec, points, reason, currentUser(current)));
+        log.info("Reward created: rewardId={}, target={}, userId={}", reward.getId(), target(reward), current.id());
+        return response(reward, current);
+    }
+
+    /** Non-cancelled study rewards of one day, for the study review screen (managers only). */
+    @Transactional(readOnly = true)
+    public List<RewardResponse> studyRewards(LocalDate date, AuthenticatedUser current) {
+        requireRewardManager(current);
+        return rewardRepository.findByStudyDateAndStatusNotOrderByIdAsc(date, RewardStatus.CANCELLED).stream()
+                .map(r -> response(r, current))
+                .toList();
+    }
+
+    /** CONFIRMER or ADMIN, otherwise 403. Also guards the study review screen. */
+    public void requireRewardManager(AuthenticatedUser current) {
+        requireManager(current, "study-review", null);
     }
 
     @Transactional
@@ -98,14 +135,16 @@ public class RewardService {
         ScheduleReward reward = find(rewardId);
         requirePending(reward);
         requireNotOwn(reward, current);
-        Schedule schedule = reward.getSchedule();
-        if (schedule.isDeleted()) {
-            throw notCompleted();
+        if (!reward.isStudy()) {
+            Schedule schedule = reward.getSchedule();
+            if (schedule.isDeleted()) {
+                throw notCompleted();
+            }
+            requireCompleted(schedule);
         }
-        requireCompleted(schedule);
         reward.pay(currentUser(current));
         flush();
-        log.info("Reward paid: rewardId={}, scheduleId={}, userId={}", rewardId, schedule.getId(), current.id());
+        log.info("Reward paid: rewardId={}, target={}, userId={}", rewardId, target(reward), current.id());
         return response(reward, current);
     }
 
@@ -117,7 +156,7 @@ public class RewardService {
         requirePending(reward);
         reward.cancel(currentUser(current));
         flush();
-        log.info("Reward cancelled: rewardId={}, scheduleId={}, userId={}", rewardId, reward.getSchedule().getId(), current.id());
+        log.info("Reward cancelled: rewardId={}, target={}, userId={}", rewardId, target(reward), current.id());
         return response(reward, current);
     }
 
@@ -150,6 +189,11 @@ public class RewardService {
 
     private RewardResponse response(ScheduleReward reward, AuthenticatedUser current) {
         return RewardResponse.from(reward, isRewardManager(current) && reward.isPending() && !reward.isFor(current.id()));
+    }
+
+    /** For logs: "schedule:12" or "study:2026-09-28". */
+    private static String target(ScheduleReward reward) {
+        return reward.isStudy() ? "study:" + reward.getStudyDate() : "schedule:" + reward.getSchedule().getId();
     }
 
     private ScheduleReward find(long rewardId) {

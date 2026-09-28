@@ -37,3 +37,4 @@
 |------|------|-------|------|
 | TASK-17 | 중고등학생 디자인 + 로그인 테스트 모드(닉네임 로그인, D-046) + 모바일 dev 접속(`npm run dev:mobile`) | Claude | DONE (BE·FE 테스트 통과), **Render 운영 테스트 모드 동작 확인 대기** |
 | TASK-TIMER-01 | 학생 공부시간 Timer (`.ai/timer-task/`, D-047) | Claude | DONE (BE 243 · FE 177, 로컬 API 확인), **실기기 모바일 Chrome/Safari·E2E 미실행** |
+| TASK-TIMER-02 | 확인자 공부 기록 확인 + 하루 단위 공부 보상 (D-048) | Claude | DONE (BE 248 · FE 183, 로컬 API 확인), **V3~V5 실제 PostgreSQL 미검증(Docker 없음)** |

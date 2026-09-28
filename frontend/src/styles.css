@@ -591,6 +591,10 @@ td.num {
   content: "⏱️" / "";
 }
 
+.menu a[href="/study/review"]::before {
+  content: "🔍" / "";
+}
+
 .menu a[href="/schedule"]::before {
   content: "📝" / "";
 }
@@ -2087,5 +2091,86 @@ button.chip-add {
   .study-card {
     padding: 16px 14px;
     box-shadow: 4px 4px 0 var(--border);
+  }
+}
+
+/* ---------- Study review (TASK-TIMER-02, reward managers) ---------- */
+
+.review-date {
+  margin-bottom: 18px;
+}
+
+.review-date input {
+  width: auto;
+}
+
+.review-list {
+  display: grid;
+  gap: 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.review-card {
+  padding: 14px 16px;
+  border: 2.5px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+}
+
+.review-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.review-total {
+  font-size: 1.5rem;
+  font-weight: 900;
+}
+
+.review-split {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+  margin: 4px 0 10px;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.review-reward {
+  font-weight: 800;
+}
+
+.review-sessions {
+  display: grid;
+  gap: 4px;
+  margin: 12px 0 0;
+  padding: 10px 12px;
+  border: 2px dashed var(--line);
+  border-radius: var(--radius-sm);
+  list-style: none;
+}
+
+.review-sessions li {
+  display: grid;
+  grid-template-columns: 1fr auto auto auto;
+  gap: 10px;
+  align-items: baseline;
+  font-size: 0.9rem;
+}
+
+.review-card .reward-form {
+  margin: 12px 0 0;
+}
+
+@media (max-width: 699px) {
+  .review-sessions li {
+    grid-template-columns: 1fr auto;
   }
 }
