@@ -30,9 +30,9 @@ services:
       - key: BOOTSTRAP_ADMIN_NICKNAME
         sync: false
       # "true": test sign-in (signup = ID + nickname, login = nickname only; anyone knowing a nickname can
-      # sign in as that user). Used by both the frontend build and the backend. Keep "false" for real users.
+      # sign in as that user). Used by both the frontend build and the backend. Set back to "false" for real users.
       - key: AUTH_TEST_MODE
-        value: "false"
+        value: "true"
       # Slack Incoming Webhook of the confirmers' channel (secret). Leave empty to turn notifications off.
       - key: SLACK_WEBHOOK_URL
         sync: false
