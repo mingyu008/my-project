@@ -13,6 +13,7 @@ import java.util.Set;
 public record UserResponse(
         Long id,
         String loginIdentifier,
+        String nickname,
         UserStatus status,
         Set<Role> roles,
         Instant createdAt
@@ -22,6 +23,7 @@ public record UserResponse(
         return new UserResponse(
                 user.getId(),
                 user.getLoginIdentifier(),
+                user.getNickname(),
                 user.getStatus(),
                 Set.copyOf(user.getRoles()),
                 user.getCreatedAt()

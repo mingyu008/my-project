@@ -26,6 +26,8 @@ export default defineConfig({
     },
     {
       command: "npm run dev",
+      // The specs use the password flow; the e2e backend profile has test mode off too.
+      env: { VITE_AUTH_TEST_MODE: "false" },
       url: "http://localhost:3000",
       timeout: 60_000,
       reuseExistingServer: false,

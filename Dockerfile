@@ -8,6 +8,10 @@ RUN npm ci
 COPY frontend/ ./
 # Empty base URL: the app calls /api/... on its own origin.
 ENV VITE_API_BASE_URL=""
+# Test-mode sign-in screens (nickname only). Render passes service env vars as build args, so the one
+# AUTH_TEST_MODE variable switches both this build and the backend (app.auth.test-mode).
+ARG AUTH_TEST_MODE=false
+ENV VITE_AUTH_TEST_MODE=$AUTH_TEST_MODE
 RUN npm run build
 
 # --- 2. Spring Boot jar with the React build as static resources ---------------

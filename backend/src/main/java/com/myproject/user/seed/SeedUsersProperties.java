@@ -17,9 +17,13 @@ public record SeedUsersProperties(
         @DefaultValue List<SeedUser> users
 ) {
 
+    /**
+     * @param password may be blank when a nickname is given (test-mode login); a random one is used then
+     */
     public record SeedUser(
             String loginIdentifier,
             String password,
+            String nickname,
             @DefaultValue("USER") Set<Role> roles,
             @DefaultValue("ACTIVE") UserStatus status
     ) {
@@ -29,7 +33,8 @@ public record SeedUsersProperties(
          */
         @Override
         public String toString() {
-            return "SeedUser{loginIdentifier='" + loginIdentifier + "', roles=" + roles + ", status=" + status + '}';
+            return "SeedUser{loginIdentifier='" + loginIdentifier + "', nickname='" + nickname
+                    + "', roles=" + roles + ", status=" + status + '}';
         }
     }
 }

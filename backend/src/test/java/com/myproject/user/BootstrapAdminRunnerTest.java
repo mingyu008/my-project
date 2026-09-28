@@ -33,7 +33,34 @@ class BootstrapAdminRunnerTest {
     }
 
     private void run(String loginIdentifier, String password) {
-        new BootstrapAdminRunner(new BootstrapAdminProperties(loginIdentifier, password), userRepository, passwordEncoder).run(null);
+        run(loginIdentifier, password, null);
+    }
+
+    private void run(String loginIdentifier, String password, String nickname) {
+        new BootstrapAdminRunner(new BootstrapAdminProperties(loginIdentifier, password, nickname), userRepository, passwordEncoder)
+                .run(null);
+    }
+
+    @Test
+    void createsTheFirstAdminWithANickname() {
+        run("boss", PASSWORD, " 관리자 ");
+
+        assertThat(userRepository.findByLoginIdentifier("boss").orElseThrow().getNickname()).isEqualTo("관리자");
+    }
+
+    @Test
+    void givesAnExistingAdminTheNicknameOnlyIfItHasNone() {
+        userRepository.save(User.create("boss", passwordEncoder.encode(PASSWORD), Set.of(Role.USER, Role.ADMIN)));
+        userRepository.save(User.create("member", passwordEncoder.encode(PASSWORD), Set.of(Role.USER)));
+
+        run("member", PASSWORD, "관리자");
+        assertThat(userRepository.findByLoginIdentifier("member").orElseThrow().getNickname()).isNull();
+
+        run("boss", PASSWORD, "관리자");
+        assertThat(userRepository.findByLoginIdentifier("boss").orElseThrow().getNickname()).isEqualTo("관리자");
+
+        run("boss", PASSWORD, "새이름");
+        assertThat(userRepository.findByLoginIdentifier("boss").orElseThrow().getNickname()).isEqualTo("관리자");
     }
 
     @Test

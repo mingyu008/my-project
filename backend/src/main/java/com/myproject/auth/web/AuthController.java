@@ -1,5 +1,6 @@
 package com.myproject.auth.web;
 
+import com.myproject.auth.config.AuthModeProperties;
 import com.myproject.auth.service.AuthService;
 import com.myproject.auth.service.AuthenticatedUser;
 import com.myproject.auth.service.AuthenticationFailedException;
@@ -50,16 +51,23 @@ public class AuthController {
     private final SecurityContextHolderStrategy securityContextHolderStrategy =
             SecurityContextHolder.getContextHolderStrategy();
 
+    private final boolean testMode;
+
     public AuthController(
             AuthService authService,
             LoginAttemptLimiter loginAttemptLimiter,
             SessionAuthenticationStrategy sessionAuthenticationStrategy,
-            SecurityContextRepository securityContextRepository
+            SecurityContextRepository securityContextRepository,
+            AuthModeProperties authMode
     ) {
         this.authService = authService;
         this.loginAttemptLimiter = loginAttemptLimiter;
         this.sessionAuthenticationStrategy = sessionAuthenticationStrategy;
         this.securityContextRepository = securityContextRepository;
+        this.testMode = authMode.testMode();
+        if (testMode) {
+            log.warn("Auth TEST MODE is on: login by nickname only, no password. Never use with real users.");
+        }
     }
 
     /**
@@ -81,7 +89,7 @@ public class AuthController {
             HttpServletRequest request,
             HttpServletResponse response
     ) {
-        String identifierKey = rateLimitKey(loginRequest.username());
+        String identifierKey = testMode ? nicknameKey(loginRequest.nickname()) : rateLimitKey(loginRequest.username());
         String clientKey = request.getRemoteAddr();
         // Checked before hashing so that blocked attempts cost no Argon2 work.
         loginAttemptLimiter.blockedFor(identifierKey, clientKey).ifPresent(retryAfter -> {
@@ -91,7 +99,9 @@ public class AuthController {
 
         AuthenticatedUser user;
         try {
-            user = authService.authenticate(loginRequest.username(), loginRequest.password());
+            user = testMode
+                    ? authService.authenticateByNickname(loginRequest.nickname())
+                    : authService.authenticate(loginRequest.username(), loginRequest.password());
         } catch (AuthenticationFailedException e) {
             loginAttemptLimiter.recordFailure(identifierKey, clientKey);
             throw e;
@@ -138,6 +148,14 @@ public class AuthController {
     private static String rateLimitKey(String loginIdentifier) {
         try {
             return User.normalizeLoginIdentifier(loginIdentifier);
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
+    }
+
+    private static String nicknameKey(String nickname) {
+        try {
+            return User.normalizeNickname(nickname);
         } catch (IllegalArgumentException e) {
             return null;
         }

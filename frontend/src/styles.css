@@ -358,6 +358,32 @@ textarea:disabled {
   font-weight: 700;
 }
 
+.field p.ok {
+  color: var(--success);
+  font-weight: 700;
+}
+
+.field p.ok::before {
+  content: "✅ " / "";
+}
+
+/* Input with a button beside it (e.g. duplicate check). */
+.input-with-button {
+  display: flex;
+  gap: 8px;
+}
+
+.input-with-button input {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.input-with-button button {
+  flex: none;
+  min-height: 46px;
+  white-space: nowrap;
+}
+
 /* ---------- Messages ---------- */
 
 [role="alert"] {

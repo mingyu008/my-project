@@ -5,25 +5,41 @@ export type Role = "USER" | "ADMIN" | "CONFIRMER";
 export interface AuthUser {
   id: number;
   loginIdentifier: string;
+  /** Test-mode login name; null (or absent) for accounts without one. */
+  nickname?: string | null;
   roles: Role[];
 }
 
-export interface LoginCredentials {
-  username: string;
-  password: string;
-}
+/** Password login, or nickname-only login in test mode (auth/authMode.ts). */
+export type LoginCredentials = { username: string; password: string } | { nickname: string };
+
+/** Password signup, or ID + nickname signup in test mode. */
+export type SignupRequest = { username: string; password: string } | { username: string; nickname: string };
 
 export interface SignupResult {
   loginIdentifier: string;
-  status: "PENDING";
+  nickname?: string | null;
+  /** PENDING until an ADMIN approves; ACTIVE at once in test mode. */
+  status: "PENDING" | "ACTIVE";
 }
 
 export const authApi = {
   /**
-   * Creates a PENDING account; it can log in only after an ADMIN approves it.
+   * Creates a PENDING account (it can log in only after an ADMIN approves it), or an ACTIVE one in test mode.
    */
-  signup(credentials: LoginCredentials): Promise<SignupResult> {
-    return apiClient.post<SignupResult>("/api/auth/signup", credentials);
+  signup(request: SignupRequest): Promise<SignupResult> {
+    return apiClient.post<SignupResult>("/api/auth/signup", request);
+  },
+
+  /**
+   * Test mode only: whether the (already normalized) value is free. Invalid values reject with a 400 ApiError.
+   */
+  async isAvailable(field: "username" | "nickname", value: string, signal?: AbortSignal): Promise<boolean> {
+    const result = await apiClient.get<{ available: boolean }>(
+      `/api/auth/availability?${field}=${encodeURIComponent(value)}`,
+      signal,
+    );
+    return result.available;
   },
 
   /**
@@ -51,3 +67,8 @@ export const authApi = {
     return apiClient.get<AuthUser>("/api/auth/me", signal);
   },
 };
+
+/** Name shown for the signed-in user: the nickname when there is one. */
+export function displayName(user: AuthUser): string {
+  return user.nickname || user.loginIdentifier;
+}

@@ -2,5 +2,8 @@ package com.myproject.user.signup;
 
 import com.myproject.user.domain.UserStatus;
 
-public record SignupResponse(String loginIdentifier, UserStatus status) {
+/**
+ * @param nickname null outside test mode
+ */
+public record SignupResponse(String loginIdentifier, String nickname, UserStatus status) {
 }

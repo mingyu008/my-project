@@ -1,5 +1,6 @@
 package com.myproject.security;
 
+import com.myproject.auth.config.AuthModeProperties;
 import com.myproject.auth.service.AuthenticatedUser;
 import com.myproject.auth.service.LoginRateLimitProperties;
 import com.myproject.user.repository.UserRepository;
@@ -39,7 +40,7 @@ import java.util.List;
 
 @Configuration
 @EnableWebSecurity
-@EnableConfigurationProperties({CorsProperties.class, LoginRateLimitProperties.class})
+@EnableConfigurationProperties({CorsProperties.class, LoginRateLimitProperties.class, AuthModeProperties.class})
 public class SecurityConfig {
 
     public static final String CSRF_HEADER_NAME = "X-XSRF-TOKEN";
@@ -83,6 +84,8 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.GET, "/api/auth/csrf", "/api/health").permitAll()
+                        // Duplicate check for the test-mode signup form (404 when test mode is off).
+                        .requestMatchers(HttpMethod.GET, "/api/auth/availability").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/auth/login", "/api/auth/signup").permitAll()
                         // Lets Boot's error dispatch return the real status (e.g. 400) instead of 401.
                         .requestMatchers("/error").permitAll()

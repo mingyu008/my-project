@@ -1,5 +1,8 @@
 # Browser E2E tests (frontend/e2e). Fixture accounts on a throwaway in-memory DB; not real credentials.
 app:
+  # The E2E specs use the password flow (playwright.config.ts builds the frontend with the same setting).
+  auth:
+    test-mode: false
   seed:
     enabled: true
     users:

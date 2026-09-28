@@ -1,10 +1,13 @@
 import { lazy, Suspense, type ReactNode } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
+import { AUTH_TEST_MODE } from "./auth/authMode";
 import { ProtectedRoute } from "./auth/ProtectedRoute";
 import { HomePage } from "./pages/HomePage";
 import { LoadingScreen } from "./pages/LoadingScreen";
 import { LoginPage } from "./pages/LoginPage";
 import { SignupPage } from "./pages/SignupPage";
+import { TestLoginPage } from "./pages/TestLoginPage";
+import { TestSignupPage } from "./pages/TestSignupPage";
 import { UsersPage } from "./pages/UsersPage";
 import { PostDetailPage } from "./pages/board/PostDetailPage";
 import { PostFormPage } from "./pages/board/PostFormPage";
@@ -25,8 +28,8 @@ const protect = (element: ReactNode) => <ProtectedRoute>{element}</ProtectedRout
 export function App() {
   return (
     <Routes>
-      <Route path="/login" element={<LoginPage />} />
-      <Route path="/signup" element={<SignupPage />} />
+      <Route path="/login" element={AUTH_TEST_MODE ? <TestLoginPage /> : <LoginPage />} />
+      <Route path="/signup" element={AUTH_TEST_MODE ? <TestSignupPage /> : <SignupPage />} />
       <Route path="/" element={protect(<HomePage />)} />
       <Route
         path="/grid"

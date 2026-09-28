@@ -17,12 +17,14 @@ import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 
+import java.text.Normalizer;
 import java.time.Instant;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 /**
  * Authentication user.
@@ -33,11 +35,17 @@ import java.util.Set;
 @Entity
 @Table(
         name = "users",
-        uniqueConstraints = @UniqueConstraint(name = "uk_users_login_identifier", columnNames = "login_identifier")
+        uniqueConstraints = {
+                @UniqueConstraint(name = "uk_users_login_identifier", columnNames = "login_identifier"),
+                @UniqueConstraint(name = "uk_users_nickname", columnNames = "nickname")
+        }
 )
 public class User {
 
     public static final int LOGIN_IDENTIFIER_MAX_LENGTH = 100;
+
+    /** 2 to 10 complete Hangul syllables (가-힣). */
+    private static final Pattern NICKNAME_PATTERN = Pattern.compile("[\\uAC00-\\uD7A3]{2,10}");
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -45,6 +53,10 @@ public class User {
 
     @Column(name = "login_identifier", nullable = false, length = LOGIN_IDENTIFIER_MAX_LENGTH)
     private String loginIdentifier;
+
+    /** Login name in test mode (AuthModeProperties). Null for accounts created without one. */
+    @Column(name = "nickname", length = 20)
+    private String nickname;
 
     @JsonIgnore
     @Column(name = "password_hash", nullable = false, length = 255)
@@ -105,6 +117,26 @@ public class User {
             throw new IllegalArgumentException("loginIdentifier is too long");
         }
         return normalized;
+    }
+
+    /**
+     * Canonical form used for storage and lookup: trimmed and NFC-composed (some keyboards send decomposed jamo).
+     *
+     * @throws IllegalArgumentException unless the result is 2 to 10 Hangul syllables
+     */
+    public static String normalizeNickname(String nickname) {
+        if (nickname == null) {
+            throw new IllegalArgumentException("nickname must not be blank");
+        }
+        String normalized = Normalizer.normalize(nickname.trim(), Normalizer.Form.NFC);
+        if (!NICKNAME_PATTERN.matcher(normalized).matches()) {
+            throw new IllegalArgumentException("nickname must be 2 to 10 Hangul syllables");
+        }
+        return normalized;
+    }
+
+    public void assignNickname(String nickname) {
+        this.nickname = normalizeNickname(nickname);
     }
 
     private static String requirePasswordHash(String passwordHash) {
@@ -177,6 +209,10 @@ public class User {
         return loginIdentifier;
     }
 
+    public String getNickname() {
+        return nickname;
+    }
+
     /**
      * For password verification only. Never log, serialize, or return this value.
      */
@@ -223,6 +259,7 @@ public class User {
     public String toString() {
         return "User{id=" + id
                 + ", loginIdentifier='" + loginIdentifier + '\''
+                + ", nickname='" + nickname + '\''
                 + ", status=" + status
                 + ", roles=" + roles
                 + '}';

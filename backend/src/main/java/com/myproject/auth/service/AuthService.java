@@ -78,6 +78,30 @@ public class AuthService {
         return AuthenticatedUser.from(user);
     }
 
+    /**
+     * Test mode only (AuthModeProperties): the nickname alone identifies and authenticates the user.
+     *
+     * @throws AuthenticationFailedException for any failure, always with the same message
+     */
+    @Transactional(readOnly = true)
+    public AuthenticatedUser authenticateByNickname(String nickname) {
+        Optional<User> found;
+        try {
+            found = userRepository.findByNickname(User.normalizeNickname(nickname));
+        } catch (IllegalArgumentException e) {
+            throw failure(Reason.INVALID_INPUT, null);
+        }
+        if (found.isEmpty()) {
+            throw failure(Reason.USER_NOT_FOUND, null);
+        }
+        User user = found.get();
+        if (!user.canAuthenticate()) {
+            throw failure(user.isPending() ? Reason.PENDING_APPROVAL : Reason.INACTIVE, user.getId());
+        }
+        log.info("Authentication succeeded (test mode, nickname): userId={}", user.getId());
+        return AuthenticatedUser.from(user);
+    }
+
     private Optional<User> findUser(String loginIdentifier) {
         String normalized;
         try {

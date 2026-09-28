@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { displayName } from "../api/authApi";
 import { useAuth } from "../auth/AuthContext";
 import { LogoutButton } from "../auth/LogoutButton";
 import { navItems } from "../layout/navItems";
@@ -12,7 +13,7 @@ export function HomePage() {
       <div className="page-header">
         <div>
           <h1>홈</h1>
-          {user && <p className="muted">{user.loginIdentifier} 님으로 로그인했습니다.</p>}
+          {user && <p className="muted">{displayName(user)} 님으로 로그인했습니다.</p>}
         </div>
         <LogoutButton />
       </div>

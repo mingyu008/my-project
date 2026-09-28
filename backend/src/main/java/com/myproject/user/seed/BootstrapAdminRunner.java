@@ -49,6 +49,7 @@ public class BootstrapAdminRunner implements ApplicationRunner {
         }
         if (userRepository.existsWithRole(Role.ADMIN)) {
             log.info("Bootstrap admin skipped: an ADMIN already exists");
+            assignNicknameToExistingAdmin();
             return;
         }
         String loginIdentifier = User.normalizeLoginIdentifier(properties.loginIdentifier());
@@ -61,8 +62,30 @@ public class BootstrapAdminRunner implements ApplicationRunner {
         } catch (BadRequestException e) {
             throw new IllegalStateException("Bootstrap admin password rejected: " + e.getMessage());
         }
-        User admin = userRepository.save(
-                User.create(loginIdentifier, passwordEncoder.encode(properties.password()), Set.of(Role.USER, Role.ADMIN)));
+        User admin = User.create(loginIdentifier, passwordEncoder.encode(properties.password()), Set.of(Role.USER, Role.ADMIN));
+        if (properties.hasNickname()) {
+            admin.assignNickname(properties.nickname());
+        }
+        admin = userRepository.save(admin);
         log.info("Bootstrap admin created: userId={}", admin.getId());
+    }
+
+    /**
+     * Lets an ADMIN created before nicknames existed sign in once test mode is turned on: the configured nickname
+     * is given to the configured account only if that account is an ADMIN without a nickname and nobody uses it.
+     */
+    private void assignNicknameToExistingAdmin() {
+        if (!properties.hasNickname()) {
+            return;
+        }
+        String nickname = User.normalizeNickname(properties.nickname());
+        userRepository.findByLoginIdentifier(User.normalizeLoginIdentifier(properties.loginIdentifier()))
+                .filter(user -> user.getRoles().contains(Role.ADMIN) && user.getNickname() == null)
+                .filter(user -> !userRepository.existsByNickname(nickname))
+                .ifPresent(user -> {
+                    user.assignNickname(nickname);
+                    userRepository.save(user);
+                    log.info("Bootstrap admin nickname set: userId={}", user.getId());
+                });
     }
 }

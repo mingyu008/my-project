@@ -5,9 +5,9 @@ import com.myproject.user.domain.Role;
 
 import java.util.Set;
 
-public record AuthenticatedUserResponse(Long id, String loginIdentifier, Set<Role> roles) {
+public record AuthenticatedUserResponse(Long id, String loginIdentifier, String nickname, Set<Role> roles) {
 
     public static AuthenticatedUserResponse from(AuthenticatedUser user) {
-        return new AuthenticatedUserResponse(user.id(), user.loginIdentifier(), user.roles());
+        return new AuthenticatedUserResponse(user.id(), user.loginIdentifier(), user.nickname(), user.roles());
     }
 }

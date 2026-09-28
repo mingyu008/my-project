@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, NavLink, useLocation } from "react-router-dom";
+import { displayName } from "../api/authApi";
 import { useAuth } from "../auth/AuthContext";
 import { LogoutButton } from "../auth/LogoutButton";
 import { navItems } from "./navItems";
@@ -29,7 +30,7 @@ export function AppHeader() {
           My Project
         </Link>
         <div className="app-header-right">
-          {state.user && <span className="app-user">{state.user.loginIdentifier}</span>}
+          {state.user && <span className="app-user">{displayName(state.user)}</span>}
           <button
             type="button"
             className="secondary small menu-button"

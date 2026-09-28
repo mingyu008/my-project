@@ -23,6 +23,29 @@ export function normalizeLoginIdentifier(value: string): string {
   return value.trim().toLowerCase();
 }
 
+/** Test mode: mirrors User.normalizeNickname on the server (2~10 complete Hangul syllables, NFC). */
+export const NICKNAME_PATTERN = /^[가-힣]{2,10}$/;
+
+export function normalizeNickname(value: string): string {
+  return value.trim().normalize("NFC");
+}
+
+export const TEST_MODE_MESSAGES = {
+  identifierHint: "4~30자, 영문 소문자·숫자·'.'·'_'·'-'",
+  nicknameHint: "한글 2~10자 · 로그인할 때 이 닉네임만 입력해요",
+  nicknameInvalid: "닉네임은 한글 2~10자로 입력해 주세요.",
+  nicknameRequired: "닉네임을 입력해 주세요.",
+  identifierAvailable: "사용할 수 있는 아이디예요.",
+  nicknameAvailable: "사용할 수 있는 닉네임이에요.",
+  nicknameTaken: "이미 사용 중인 닉네임입니다.",
+  identifierNotChecked: "아이디 중복 확인을 해 주세요.",
+  nicknameNotChecked: "닉네임 중복 확인을 해 주세요.",
+  conflict: "아이디 또는 닉네임이 방금 다른 사람에게 사용되었습니다. 다시 확인해 주세요.",
+  checkFailed: "중복 확인에 실패했습니다. 잠시 후 다시 시도해 주세요.",
+  completed: "가입 완료! 이제 닉네임만으로 로그인할 수 있어요.",
+  loginFailed: "가입되지 않은 닉네임이거나 로그인할 수 없는 계정입니다.",
+} as const;
+
 export interface SignupFieldErrors {
   username?: string;
   password?: string;

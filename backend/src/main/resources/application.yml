@@ -44,10 +44,17 @@ app:
       webhook-url: ${SLACK_WEBHOOK_URL:}
       # Base URL for links in messages; Render provides RENDER_EXTERNAL_URL.
       public-url: ${APP_PUBLIC_URL:${RENDER_EXTERNAL_URL:}}
+  auth:
+    # Test version of sign-in (AuthModeProperties): signup = ID + Hangul nickname, login = nickname only.
+    # Anyone who knows a nickname can sign in as that user. The frontend build must use the same value
+    # (VITE_AUTH_TEST_MODE; the Dockerfile passes AUTH_TEST_MODE through).
+    test-mode: ${AUTH_TEST_MODE:false}
   # First ADMIN for a fresh database; ignored once any ADMIN exists (BootstrapAdminRunner).
   bootstrap-admin:
     login-identifier: ${BOOTSTRAP_ADMIN_USERNAME:}
     password: ${BOOTSTRAP_ADMIN_PASSWORD:}
+    # ADMIN's login name in test mode; also given to an existing ADMIN with that login identifier.
+    nickname: ${BOOTSTRAP_ADMIN_NICKNAME:}
   cors:
     # Exact origins only. "*" is rejected at startup.
     allowed-origins:

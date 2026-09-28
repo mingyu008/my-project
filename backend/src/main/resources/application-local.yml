@@ -1,12 +1,17 @@
 # Manual local testing: mvn spring-boot:run -Dspring-boot.run.profiles=local
-# Passwords come from environment variables; startup fails if they are missing.
+# Test mode: log in with the nickname only (사용자 / 관리자). Passwords are optional here (used only
+# when test mode is turned off: AUTH_TEST_MODE=false plus LOCAL_USER_PASSWORD / LOCAL_ADMIN_PASSWORD).
 app:
+  auth:
+    test-mode: ${AUTH_TEST_MODE:true}
   seed:
     enabled: true
     users:
       - login-identifier: user
-        password: ${LOCAL_USER_PASSWORD}
+        password: ${LOCAL_USER_PASSWORD:}
+        nickname: 사용자
         roles: [USER]
       - login-identifier: admin
-        password: ${LOCAL_ADMIN_PASSWORD}
+        password: ${LOCAL_ADMIN_PASSWORD:}
+        nickname: 관리자
         roles: [USER, ADMIN]

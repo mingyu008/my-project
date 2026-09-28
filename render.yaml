@@ -25,6 +25,14 @@ services:
         sync: false
       - key: BOOTSTRAP_ADMIN_PASSWORD
         sync: false
+      # ADMIN's login name when AUTH_TEST_MODE is on (Hangul, 2-10 syllables). Also given to the existing
+      # ADMIN named by BOOTSTRAP_ADMIN_USERNAME if it has none yet.
+      - key: BOOTSTRAP_ADMIN_NICKNAME
+        sync: false
+      # "true": test sign-in (signup = ID + nickname, login = nickname only; anyone knowing a nickname can
+      # sign in as that user). Used by both the frontend build and the backend. Keep "false" for real users.
+      - key: AUTH_TEST_MODE
+        value: "false"
       # Slack Incoming Webhook of the confirmers' channel (secret). Leave empty to turn notifications off.
       - key: SLACK_WEBHOOK_URL
         sync: false

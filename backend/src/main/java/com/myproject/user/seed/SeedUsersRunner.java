@@ -14,6 +14,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.UUID;
+
 /**
  * Creates the configured users if they do not exist yet. Enabled only with {@code app.seed.enabled=true}
  * and never under the prod profile.
@@ -41,14 +43,21 @@ public class SeedUsersRunner implements ApplicationRunner {
     public void run(ApplicationArguments args) {
         int created = 0;
         for (SeedUsersProperties.SeedUser seed : properties.users()) {
-            if (seed.password() == null || seed.password().isBlank()) {
-                throw new IllegalStateException("Seed user has no password: " + seed.loginIdentifier());
+            boolean hasPassword = seed.password() != null && !seed.password().isBlank();
+            boolean hasNickname = seed.nickname() != null && !seed.nickname().isBlank();
+            if (!hasPassword && !hasNickname) {
+                throw new IllegalStateException("Seed user has no password or nickname: " + seed.loginIdentifier());
             }
             String loginIdentifier = User.normalizeLoginIdentifier(seed.loginIdentifier());
             if (userRepository.existsByLoginIdentifier(loginIdentifier)) {
                 continue;
             }
-            User user = User.create(loginIdentifier, passwordEncoder.encode(seed.password()), seed.roles());
+            // Nickname-only seed users (test mode) get a random password nobody knows.
+            String password = hasPassword ? seed.password() : UUID.randomUUID().toString();
+            User user = User.create(loginIdentifier, passwordEncoder.encode(password), seed.roles());
+            if (hasNickname) {
+                user.assignNickname(seed.nickname());
+            }
             if (seed.status() == UserStatus.INACTIVE) {
                 user.deactivate();
             }

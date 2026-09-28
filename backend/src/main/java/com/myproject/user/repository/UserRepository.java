@@ -19,6 +19,11 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     boolean existsByLoginIdentifier(String loginIdentifier);
 
+    /** Pass a nickname normalized with {@link User#normalizeNickname(String)}. */
+    Optional<User> findByNickname(String nickname);
+
+    boolean existsByNickname(String nickname);
+
     List<User> findAllByStatusOrderByLoginIdentifierAsc(UserStatus status);
 
     @Query("select count(u) > 0 from User u join u.roles r where r = :role")
