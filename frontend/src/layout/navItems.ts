@@ -12,6 +12,7 @@ export interface NavItem {
  */
 export function navItems(user: AuthUser | null): NavItem[] {
   return [
+    { to: "/study", label: "공부 타이머" },
     { to: "/schedule", label: "일정관리" },
     { to: "/schedule/calendar", label: "일정 달력" },
     { to: "/rewards", label: isRewardManager(user) ? "보상 관리" : "내 보상" },

@@ -31,3 +31,9 @@
 | TASK-14 | 모바일/웹 반응형 (공통 헤더 메뉴, 휴대폰 카드·달력 레이아웃) | Claude | DONE (FE 148, 390px/1280px 스크린샷 확인, E2E 미실행) |
 | TASK-15 | 무료 배포: Supabase PostgreSQL + Render 한 주소 (Flyway, RLS, Docker, 최초 관리자, CSP) | Claude | 코드·로컬 검증 완료, **Supabase/Render 설정·push 대기** |
 | TASK-16 | 일정 등록·수정 Slack 알림 (확인자 공용 채널, 커밋 후 비동기) | Claude | DONE (BE 216), **Slack Webhook 발급·Render 설정 대기** |
+
+## 추가 요청 (Human, 2026-09-28)
+| Task | 제목 | Owner | 상태 |
+|------|------|-------|------|
+| TASK-17 | 중고등학생 디자인 + 로그인 테스트 모드(닉네임 로그인, D-046) + 모바일 dev 접속(`npm run dev:mobile`) | Claude | DONE (BE·FE 테스트 통과), **Render 운영 테스트 모드 동작 확인 대기** |
+| TASK-TIMER-01 | 학생 공부시간 Timer (`.ai/timer-task/`, D-047) | Claude | DONE (BE 243 · FE 177, 로컬 API 확인), **실기기 모바일 Chrome/Safari·E2E 미실행** |

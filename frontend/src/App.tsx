@@ -16,6 +16,7 @@ import { RewardsPage } from "./pages/reward/RewardsPage";
 import { ScheduleCalendarPage } from "./pages/schedule/ScheduleCalendarPage";
 import { ScheduleDetailPage } from "./pages/schedule/ScheduleDetailPage";
 import { ScheduleFormPage } from "./pages/schedule/ScheduleFormPage";
+import { StudyTimerPage } from "./pages/study/StudyTimerPage";
 
 // AG Grid is large; load it only when a grid screen is opened.
 const GridPage = lazy(() => import("./pages/GridPage").then((m) => ({ default: m.GridPage })));
@@ -58,6 +59,7 @@ export function App() {
       <Route path="/schedule/:id" element={protect(<ScheduleDetailPage />)} />
       <Route path="/schedule/:id/edit" element={protect(<ScheduleFormPage key="edit" />)} />
       <Route path="/rewards" element={protect(<RewardsPage />)} />
+      <Route path="/study" element={protect(<StudyTimerPage />)} />
       <Route
         path="/users"
         element={
